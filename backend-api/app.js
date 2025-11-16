@@ -8,8 +8,19 @@ const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const emailRoutes = require('./email');
 const emailService = require('./services/emailService');
-const groqaiRoutes = require('../groqai');
-const tmdbRoutes = require('../tmdbRoutes');
+
+// Routes optionnelles - vérifier si les fichiers existent
+let groqaiRoutes, tmdbRoutes;
+try {
+  groqaiRoutes = require('../groqai');
+} catch (e) {
+  console.warn('⚠️ groqai.js non trouvé, route désactivée');
+}
+try {
+  tmdbRoutes = require('./routes/tmdbRoutes') || require('../tmdbRoutes');
+} catch (e) {
+  console.warn('⚠️ tmdbRoutes.js non trouvé, route désactivée');
+}
 
 const app = express();
 
@@ -49,41 +60,59 @@ app.use('/api/users', userRoutes);
 // Routes Reviews (Avaliações)
 app.use('/api/reviews', reviewRoutes);
 
-// Routes Groq AI Chatbot
-app.use('/api', groqaiRoutes);
+// Routes Groq AI Chatbot (si disponible)
+if (groqaiRoutes) {
+  app.use('/api', groqaiRoutes);
+}
 
-// Routes TMDB Search
-app.use('/api/tmdb', tmdbRoutes);
+// Routes TMDB Search (si disponible)
+if (tmdbRoutes) {
+  app.use('/api/tmdb', tmdbRoutes);
+}
 
 // Routes OAuth - priorité 2
 // Les routes dans email.js incluent déjà /auth/ dans leur chemin
 app.use('/', emailRoutes);
 
+// Route de base pour vérifier que l'API fonctionne
+app.get('/', (req, res) => {
+  res.json({
+    message: 'CINEHOME Backend API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      users: '/api/users',
+      reviews: '/api/reviews',
+      tmdb: '/api/tmdb',
+      chat: '/api/chat'
+    }
+  });
+});
+
 // Servir les fichiers frontend EN DERNIER pour ne pas interférer avec les routes API
-// __dirname = CINEHOMEBACK/src
-// Utiliser le dossier 'public' pour la production (Render)
-const frontendPath = path.join(__dirname, '..', 'public');
+// __dirname = backend-api/
+// Utiliser le dossier '../frontend' pour la production (Render)
+const frontendPath = path.join(__dirname, '..', 'frontend');
 console.log('📁 Frontend path:', frontendPath);
 
 // Vérifier si le dossier existe
 const fs = require('fs');
 if (!fs.existsSync(frontendPath)) {
-  console.error('❌ ERREUR: Le dossier frontend n\'existe pas:', frontendPath);
-  console.warn('⚠️ Tentative de servir depuis CINEHOME---Homepage (dev only)');
-  // Fallback pour développement local
-  const devPath = path.join(__dirname, '..', '..', 'CINEHOME---Homepage');
-  if (fs.existsSync(devPath)) {
-    console.log('✅ Dossier dev trouvé:', devPath);
-    app.use(express.static(devPath));
-  }
+  console.warn('⚠️ Le dossier frontend n\'existe pas:', frontendPath);
+  console.warn('⚠️ Les fichiers statiques ne seront pas servis (mode API only)');
 } else {
-  console.log('✅ Dossier frontend trouvé');
+  console.log('✅ Dossier frontend trouvé:', frontendPath);
   
   // Lister les fichiers HTML dans le dossier
-  const htmlFiles = fs.readdirSync(frontendPath).filter(f => f.endsWith('.html'));
-  console.log('📄 Fichiers HTML disponibles:', htmlFiles.join(', '));
+  try {
+    const htmlFiles = fs.readdirSync(frontendPath).filter(f => f.endsWith('.html'));
+    console.log('📄 Fichiers HTML disponibles:', htmlFiles.join(', '));
+  } catch (err) {
+    console.warn('⚠️ Erreur lecture dossier frontend:', err.message);
+  }
   
-  // Servir les fichiers statiques depuis public/
+  // Servir les fichiers statiques depuis frontend/
   app.use(express.static(frontendPath));
 }
 
