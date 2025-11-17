@@ -44,7 +44,7 @@
 
     <script>
         // Configuração da API
-        const API_URL = 'https://cinemaf.onrender.com/api/chat';
+        const API_URL = 'https://cinehome.onrender.com/api/chat';
 
         // Elementos DOM
         const chatMessages = document.getElementById('chatMessages');
@@ -168,7 +168,7 @@
         // Verificar conexão com backend ao carregar
         window.addEventListener('load', async () => {
             try {
-                const response = await fetch('https://cinemaf.onrender.com/health');
+                const response = await fetch('https://cinehome.onrender.com/health');
                 if (!response.ok) {
                     showError('Backend não está respondendo. Verifique a conexão com o servidor.');
                 }

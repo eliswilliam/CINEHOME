@@ -1,5 +1,5 @@
 const CONFIG = {
-  API_BASE_URL: 'https://cinemaf.onrender.com',
+  API_BASE_URL: 'https://cinehome.onrender.com',
   
   ENDPOINTS: {
     LOGIN: '/api/users/login',
