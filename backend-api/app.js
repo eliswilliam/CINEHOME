@@ -1,4 +1,4 @@
-// Charger les variables d'environnement en premier
+// Carregar as variáveis de ambiente primeiro
 require('dotenv').config();
 
 const express = require('express');
@@ -12,94 +12,94 @@ const emailService = require('./services/emailService');
 const app = express();
 
 app.use(cors({
-  origin: true,       // reflète l'origine de la requête et autorise toutes les origines
-  credentials: true,  // permet l'envoi de cookies/credentials si nécessaire
+  origin: true,       // reflete a origem da requisição e autoriza todas as origens
+  credentials: true,  // permite o envio de cookies/credenciais se necessário
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin']
 }));
 app.use(express.json());
 const path = require('path');
 
-// Connexion à MongoDB Atlas avec gestion d'erreur
-// On tente de connecter la DB mais on laisse le serveur démarrer pour permettre des tests front-back
+// Conexão ao MongoDB Atlas com tratamento de erro
+// Tentamos conectar ao BD mas deixamos o servidor iniciar para permitir testes front-back
 connectDB()
-  .then(() => console.log('✅ MongoDB connecté avec succès'))
+  .then(() => console.log('✅ MongoDB conectado com sucesso'))
   .catch((err) => {
-    console.error('❌ Erreur de connexion MongoDB:', err.message);
-    console.warn('Le serveur continue de tourner pour permettre les tests front-back. Corrigez MONGO_URI pour activer la DB.');
-    // Ne pas process.exit ici pour permettre l'utilisation d'endpoints non-DB (ex: /health)
+    console.error('❌ Erro de conexão MongoDB:', err.message);
+    console.warn('O servidor continua rodando para permitir os testes front-back. Corrija MONGO_URI para ativar o BD.');
+    // Não usar process.exit aqui para permitir o uso de endpoints sem BD (ex: /health)
   });
 
-// Middleware de logging pour debug
+// Middleware de logging para debug
 app.use((req, res, next) => {
   console.log(`📨 ${req.method} ${req.url}`);
   next();
 });
 
-// Endpoint de santé simple utilisé par le frontend
+// Endpoint de saúde simples usado pelo frontend
 app.get('/health', (req, res) => {
   return res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Routes API - priorité 1
+// Rotas API - prioridade 1
 app.use('/api/users', userRoutes);
 
-// Routes Reviews (Avaliações)
+// Rotas Reviews (Avaliações)
 app.use('/api/reviews', reviewRoutes);
 
-// Routes OAuth
+// Rotas OAuth
 app.use('/', emailRoutes);
 
-// Message de bienvenue pour la racine
-app.get('/', (req, res) => {
-  res.json({
-    message: '🎬 Bienvenue sur l\'API CINEHOME',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      users: '/api/users',
-      reviews: '/api/reviews',
-      auth: '/auth'
-    }
-  });
+// Servir arquivos estáticos do frontend (após as rotas da API)
+const publicPath = path.join(__dirname, 'public');
+console.log('📁 Servindo arquivos estáticos de:', publicPath);
+app.use(express.static(publicPath));
+
+// Rota catch-all: servir index.html para todas as rotas não-API (SPA)
+app.get('*', (req, res) => {
+  // Não interceptar rotas de API
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/health')) {
+    return res.status(404).json({ message: 'Endpoint não encontrado' });
+  }
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Port depuis .env ou valeur par défaut
+// Porta do .env ou valor padrão
 const PORT = process.env.PORT || 3000;
 
-// Démarrage du serveur
+// Inicialização do servidor
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-  console.log(`📂 Serveur HTTP en écoute...`);
+  console.log(`🚀 Servidor iniciado em http://localhost:${PORT}`);
+  console.log(`📂 Servidor HTTP em escuta...`);
   
-  // Tester configuration email de manière asynchrone sans bloquer
-  console.log('\n📧 Vérification de la configuration email...');
+  // Testar configuração de email de maneira assíncrona sem bloquear
+  console.log('\n📧 Verificando configuração de email...');
   emailService.testEmailConfiguration()
     .then(emailConfigured => {
       if (!emailConfigured) {
-        console.warn('⚠️  Configuration email manquante. Le système fonctionnera en mode développement.');
-        console.warn('💡 Pour activer l\'envoi d\'emails, configurez EMAIL_USER et EMAIL_PASSWORD dans .env');
+        console.warn('⚠️  Configuração de email ausente. O sistema funcionará em modo desenvolvimento.');
+        console.warn('💡 Para ativar o envio de emails, configure EMAIL_USER e EMAIL_PASSWORD no .env');
       }
-      console.log('✅ Serveur prêt à recevoir des requêtes\n');
+      console.log('✅ Servidor pronto para receber requisições\n');
     })
     .catch(error => {
-      console.error('❌ Erreur lors de la vérification email:', error.message);
-      console.warn('⚠️  Le système fonctionnera en mode développement.\n');
+      console.error('❌ Erro ao verificar email:', error.message);
+      console.warn('⚠️  O sistema funcionará em modo desenvolvimento.\n');
     });
 });
 
 server.on('error', (error) => {
-  console.error('❌ Erreur du serveur:', error);
+  console.error('❌ Erro do servidor:', error);
   process.exit(1);
 });
 
-// Gestion des erreurs non capturées
+// Tratamento de erros não capturados
 process.on('uncaughtException', (error) => {
-  console.error('❌ Erreur non capturée:', error);
+  console.error('❌ Erro não capturado:', error);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Promesse rejetée non gérée:', reason);
+  console.error('❌ Promessa rejeitada não tratada:', reason);
   process.exit(1);
 });

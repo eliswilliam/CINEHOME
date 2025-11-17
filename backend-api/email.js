@@ -6,14 +6,14 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// URLs configurables
+// URLs configuráveis
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cinemaf.onrender.com/reset.html';
 const FRONTEND_LOGIN_URL = process.env.FRONTEND_LOGIN_URL || 'https://cinemaf.onrender.com/profil.html';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
-// --- Google OAuth (pour récupération de mot de passe) ---
+// --- Google OAuth (para recuperação de senha) ---
 router.get('/auth/google', (_req, res) => {
-  // Utiliser l'URL de callback configurée dans .env
+  // Utilizar a URL de callback configurada no .env
   const redirectUri = process.env.GOOGLE_CALLBACK_URL || `${_req.protocol}://${_req.get('host')}/auth/google/callback`;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   
@@ -22,7 +22,7 @@ router.get('/auth/google', (_req, res) => {
   
   if (!clientId) return res.status(500).send('GOOGLE_CLIENT_ID not configured');
   
-  // Stocker le type d'action dans la session (reset password)
+  // Armazenar o tipo de ação na sessão (reset password)
   const state = Buffer.from(JSON.stringify({ action: 'reset' })).toString('base64');
   
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent&state=${state}`;
@@ -39,7 +39,7 @@ router.get('/auth/google/login', (_req, res) => {
   
   if (!clientId) return res.status(500).send('GOOGLE_CLIENT_ID not configured');
   
-  // Stocker le type d'action dans le state
+  // Armazenar o tipo de ação no state
   const state = Buffer.from(JSON.stringify({ action: 'login' })).toString('base64');
   
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent&state=${state}`;
@@ -56,7 +56,7 @@ router.get('/auth/google/signup', (_req, res) => {
   
   if (!clientId) return res.status(500).send('GOOGLE_CLIENT_ID not configured');
   
-  // Stocker le type d'action dans le state
+  // Armazenar o tipo de ação no state
   const state = Buffer.from(JSON.stringify({ action: 'signup' })).toString('base64');
   
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email%20profile&access_type=offline&prompt=consent&state=${state}`;
@@ -76,12 +76,12 @@ router.get('/auth/google/callback', async (req, res) => {
   }
   
   try {
-    // Utiliser l'URL de callback configurée dans .env (DOIT correspondre exactement à Google Console)
+    // Utilizar a URL de callback configurada no .env (DEVE corresponder exatamente ao Google Console)
     const redirectUri = process.env.GOOGLE_CALLBACK_URL || `${req.protocol}://${req.get('host')}/auth/google/callback`;
     
     console.log('🔄 Exchange token - Redirect URI:', redirectUri);
 
-    // Google expects application/x-www-form-urlencoded for the token endpoint
+    // Google espera application/x-www-form-urlencoded para o endpoint de token
     const params = new URLSearchParams();
     params.append('client_id', process.env.GOOGLE_CLIENT_ID);
     params.append('client_secret', process.env.GOOGLE_CLIENT_SECRET);
@@ -186,20 +186,20 @@ router.get('/auth/google/login/callback', async (req, res) => {
       return res.redirect(`https://cinemaf.onrender.com/login.html?error=no_email`);
     }
 
-    // Vérifier si l'utilisateur existe dans la base de données
+    // Verificar se o usuário existe no banco de dados
     const user = await User.findOne({ email });
 
     if (!user) {
-      console.warn('⚠️ Utilisateur non trouvé - redirection vers cadastro');
+      console.warn('⚠️ Usuário não encontrado - redirecionando para cadastro');
       return res.redirect(`https://cinemaf.onrender.com/login.html?error=user_not_found&email=${encodeURIComponent(email)}`);
     }
 
-    // Générer un token JWT pour l'utilisateur
+    // Gerar um token JWT para o usuário
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
     console.log('✅ Login successful, redirecting...');
     
-    // Rediriger vers la page de profil avec le token
+    // Redirecionar para a página de perfil com o token
     return res.redirect(`${FRONTEND_LOGIN_URL}?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`);
   } catch (err) {
     console.error('❌ Google OAuth LOGIN Error:', err?.response?.data || err.message || err);
@@ -257,23 +257,23 @@ router.get('/auth/google/signup/callback', async (req, res) => {
       return res.redirect(`https://cinemaf.onrender.com/login.html?error=no_email`);
     }
 
-    // Vérifier si l'utilisateur existe déjà
+    // Verificar se o usuário já existe
     let user = await User.findOne({ email });
 
     if (user) {
-      console.warn('⚠️ Utilisateur déjà existant - connexion automatique');
-      // Si l'utilisateur existe déjà, le connecter automatiquement
+      console.warn('⚠️ Usuário já existente - login automático');
+      // Se o usuário já existe, fazer login automaticamente
       const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       return res.redirect(`${FRONTEND_LOGIN_URL}?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&existing=true`);
     }
 
-    // Créer un nouvel utilisateur
-    // Générer un mot de passe aléatoire sécurisé pour les utilisateurs OAuth
+    // Criar um novo usuário
+    // Gerar uma senha aleatória segura para usuários OAuth
     const randomPassword = require('crypto').randomBytes(32).toString('hex');
     
     user = new User({
       email,
-      password: randomPassword, // Ce mot de passe sera hashé par le pre-save hook du modèle
+      password: randomPassword, // Esta senha será criptografada pelo hook pre-save do modelo
       createdViaOAuth: true,
       oauthProvider: 'google'
     });
@@ -282,12 +282,12 @@ router.get('/auth/google/signup/callback', async (req, res) => {
 
     console.log('✅ New user created via Google OAuth');
 
-    // Générer un token JWT pour le nouvel utilisateur
+    // Gerar um token JWT para o novo usuário
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
     console.log('✅ Signup successful, redirecting...');
     
-    // Rediriger vers la page de profil avec le token
+    // Redirecionar para a página de perfil com o token
     return res.redirect(`${FRONTEND_LOGIN_URL}?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&new=true`);
   } catch (err) {
     console.error('❌ Google OAuth SIGNUP Error:', err?.response?.data || err.message || err);

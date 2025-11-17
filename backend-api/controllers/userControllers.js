@@ -3,58 +3,58 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const emailService = require('../services/emailService');
 
-// Stocker codes de vérification temporairement (em produção, use Redis ou DB)
+// Armazenar códigos de verificação temporariamente (em produção, use Redis ou BD)
 const verificationCodes = new Map();
 
-// Inscription
+// Registro
 exports.register = async (req, res) => {
   try {
   const { email, password } = req.body;
   const userExist = await User.findOne({ email });
-  if (userExist) return res.status(400).json({ message: 'Utilisateur déjà existant' });
+  if (userExist) return res.status(400).json({ message: 'Usuário já existente' });
 
-  // Le mot de passe est hashé dans le hook pre('save') du modèle User.
-  // Ici on fournit le mot de passe en clair et le modèle s'occupe du hash.
+  // A senha é criptografada no hook pre('save') do modelo User.
+  // Aqui fornecemos a senha em texto claro e o modelo cuida da criptografia.
   const newUser = await User.create({ email, password });
 
-    res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
+    res.status(201).json({ message: 'Usuário criado com sucesso', user: newUser });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
-// Connexion
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Mot de passe incorrect' });
+    if (!isMatch) return res.status(401).json({ message: 'Senha incorreta' });
     
     
-  // Utiliser la clé JWT depuis les variables d'environnement pour la sécurité
+  // Utilizar a chave JWT das variáveis de ambiente para segurança
   const jwtSecret = process.env.JWT_SECRET || 'dev-secret';
-  if (!process.env.JWT_SECRET) console.warn('⚠️ JWT_SECRET non défini. Utilisation du secret de développement (dev-secret). Configurez JWT_SECRET dans .env pour la production.');
+  if (!process.env.JWT_SECRET) console.warn('⚠️ JWT_SECRET não definido. Usando segredo de desenvolvimento (dev-secret). Configure JWT_SECRET no .env para produção.');
 
   const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
 
-  res.json({ message: 'Connexion réussie', token });
+  res.json({ message: 'Login realizado com sucesso', token });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
 
-// Envoyer code de récupération par email
+// Enviar código de recuperação por email
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email requis' });
+    if (!email) return res.status(400).json({ message: 'Email obrigatório' });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
     // Gerar código de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -94,7 +94,7 @@ exports.forgotPassword = async (req, res) => {
     }
   } catch (error) {
     console.error('forgotPassword error:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
@@ -102,21 +102,21 @@ exports.forgotPassword = async (req, res) => {
 exports.verifyResetCode = async (req, res) => {
   try {
     const { email, code } = req.body;
-    if (!email || !code) return res.status(400).json({ message: 'Email et code requis' });
+    if (!email || !code) return res.status(400).json({ message: 'Email e código obrigatórios' });
 
     const storedData = verificationCodes.get(email);
     
     if (!storedData) {
-      return res.status(400).json({ message: 'Code non trouvé ou expiré' });
+      return res.status(400).json({ message: 'Código não encontrado ou expirado' });
     }
 
     if (Date.now() > storedData.expiresAt) {
       verificationCodes.delete(email);
-      return res.status(400).json({ message: 'Code expiré' });
+      return res.status(400).json({ message: 'Código expirado' });
     }
 
     if (storedData.code !== code) {
-      return res.status(400).json({ message: 'Code incorrect' });
+      return res.status(400).json({ message: 'Código incorreto' });
     }
 
     // Código válido - gerar token de reset
@@ -127,48 +127,48 @@ exports.verifyResetCode = async (req, res) => {
     verificationCodes.delete(email);
 
     res.json({ 
-      message: 'Code vérifié avec succès',
+      message: 'Código verificado com sucesso',
       resetToken 
     });
   } catch (error) {
     console.error('verifyResetCode error:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
 
-// Réinitialiser le mot de passe via resetToken JWT
+// Redefinir senha via resetToken JWT
 exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
-    if (!resetToken || !newPassword) return res.status(400).json({ message: 'resetToken and newPassword are required' });
+    if (!resetToken || !newPassword) return res.status(400).json({ message: 'resetToken e newPassword são obrigatórios' });
 
     const jwtSecret = process.env.JWT_SECRET || 'dev-secret';
     let payload;
     try {
       payload = jwt.verify(resetToken, jwtSecret);
     } catch (err) {
-      return res.status(401).json({ message: 'Invalid or expired reset token' });
+      return res.status(401).json({ message: 'Token de reset inválido ou expirado' });
     }
 
     const email = payload.email;
-    if (!email) return res.status(400).json({ message: 'Invalid token payload' });
+    if (!email) return res.status(400).json({ message: 'Payload do token inválido' });
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
     const hashed = await bcrypt.hash(newPassword, 10);
     user.password = hashed;
     await user.save();
 
-    return res.json({ message: 'Mot de passe réinitialisé avec succès' });
+    return res.json({ message: 'Senha redefinida com sucesso' });
   } catch (error) {
     console.error('resetPassword error:', error);
-    return res.status(500).json({ message: 'Erreur serveur' });
+    return res.status(500).json({ message: 'Erro no servidor' });
   }
 };
 
-// Changer le mot de passe (utilisateur connecté)
+// Alterar senha (usuário conectado)
 exports.changePassword = async (req, res) => {
   try {
     const { email, currentPassword, newPassword } = req.body;
@@ -180,13 +180,13 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
     }
 
-    // Vérifier que le nouveau mot de passe est différent
+    // Verificar que a nova senha é diferente
     if (currentPassword === newPassword) {
       console.log('❌ Nova senha igual à senha atual');
       return res.status(400).json({ message: 'A nova senha deve ser diferente da senha atual' });
     }
 
-    // Trouver l'utilisateur
+    // Encontrar o usuário
     const user = await User.findOne({ email });
     if (!user) {
       console.log('❌ Usuário não encontrado:', email);
@@ -196,7 +196,7 @@ exports.changePassword = async (req, res) => {
     console.log('✅ Usuário encontrado:', email);
     console.log('🔐 Verificando senha atual...');
 
-    // Vérifier le mot de passe actuel
+    // Verificar a senha atual
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       console.log('❌ Senha atual incorreta');
@@ -206,7 +206,7 @@ exports.changePassword = async (req, res) => {
     console.log('✅ Senha atual correta');
     console.log('🔐 Atualizando senha...');
 
-    // Hasher et sauvegarder le nouveau mot de passe
+    // Criptografar e salvar a nova senha
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();

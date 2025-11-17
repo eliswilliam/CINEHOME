@@ -1,183 +1,171 @@
-# 🚀 Déploiement CINEHOME Backend sur Render
+# 🚀 Guide de Déploiement sur Render
 
-Ce guide vous explique comment déployer l'API backend de CINEHOME sur Render.
+## 📋 Configuration Render
 
-## 📋 Prérequis
+### 1. Paramètres de Base
 
-1. **Compte GitHub** avec le repository cinehome1
-2. **Compte Render** (gratuit) : https://render.com
-3. **Base de données MongoDB** (MongoDB Atlas recommandé)
-4. **Clés API** nécessaires :
-   - TMDB API Key
-   - GROQ API Key (pour le chatbot IA)
-   - Email credentials (Gmail App Password)
+| Champ | Valeur |
+|-------|--------|
+| **Root Directory** | `backend-api` |
+| **Environment** | `Node` |
+| **Build Command** | `npm install` |
+| **Start Command** | `npm start` |
+| **Branch** | `main` |
 
-## 🎯 Étapes de Déploiement
+### 2. Variables d'Environnement à Configurer
 
-### 1. Préparer MongoDB Atlas (si pas encore fait)
+Ajoutez ces variables dans l'onglet "Environment" de Render :
 
-1. Créez un compte sur https://mongodb.com/cloud/atlas
-2. Créez un nouveau cluster (Free Tier)
-3. Configurez un utilisateur de base de données
-4. Whitelist toutes les IP (0.0.0.0/0) pour Render
-5. Copiez votre connection string
+```env
+# MongoDB Atlas (OBLIGATOIRE)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cinehome?retryWrites=true&w=majority
 
-### 2. Créer un Web Service sur Render
+# JWT Secret (OBLIGATOIRE)
+JWT_SECRET=votre_secret_jwt_tres_securise_minimum_32_caracteres
 
-1. Connectez-vous à https://render.com
+# Email Configuration (pour reset password)
+EMAIL_USER=votre.email@gmail.com
+EMAIL_PASSWORD=votre_mot_de_passe_application_gmail
+
+# TMDB API (pour les films)
+TMDB_API_KEY=votre_cle_api_tmdb
+
+# GROQ AI (optionnel - pour chatbot)
+GROQ_API_KEY=votre_cle_api_groq
+
+# Google OAuth (optionnel)
+GOOGLE_CLIENT_ID=votre_client_id
+GOOGLE_CLIENT_SECRET=votre_client_secret
+
+# Node Environment
+NODE_ENV=production
+
+# Port (automatique sur Render, mais peut être défini)
+PORT=10000
+```
+
+## 🔧 Étapes de Déploiement
+
+### Étape 1: Préparer MongoDB Atlas
+
+1. Créez un compte sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Créez un cluster gratuit (M0)
+3. Créez un utilisateur de base de données
+4. Whitelist l'IP `0.0.0.0/0` (pour permettre Render)
+5. Copiez votre URI de connexion
+
+### Étape 2: Créer le Service sur Render
+
+1. Allez sur [render.com](https://render.com)
 2. Cliquez sur **"New +"** → **"Web Service"**
-3. Connectez votre repository GitHub **eliswilliam/cinehome1**
-4. Configurez le service :
+3. Connectez votre repository GitHub : `eliswilliam/cinehome1`
+4. Configurez :
 
-#### Configuration de Base :
 ```
 Name: cinehome-backend
-Region: Frankfurt (EU Central) ou Oregon (US West)
-Branch: main
 Root Directory: backend-api
-Runtime: Node
+Environment: Node
+Region: Oregon (ou le plus proche)
+Branch: main
 Build Command: npm install
 Start Command: npm start
 ```
 
-#### Plan :
-- Sélectionnez **"Free"** pour commencer (ou un plan payant pour de meilleures performances)
+5. Sélectionnez le plan **Free**
 
-### 3. Configurer les Variables d'Environnement
+### Étape 3: Configurer les Variables d'Environnement
 
-Dans les **Environment Variables** de Render, ajoutez :
+Dans l'onglet "Environment" de votre service Render :
 
-```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cinehome?retryWrites=true&w=majority
-PORT=3000
-NODE_ENV=production
-JWT_SECRET=votre_secret_jwt_super_securise_ici
-TMDB_API_KEY=votre_clé_tmdb
-EMAIL_USER=votre_email@gmail.com
-EMAIL_PASSWORD=votre_app_password_gmail
-GROQ_API_KEY=votre_clé_groq
-FRONTEND_URL=https://votre-frontend-url.com
-```
+1. Cliquez sur **"Add Environment Variable"**
+2. Ajoutez chaque variable listée ci-dessus
+3. **Important** : Ne commitez JAMAIS ces valeurs dans Git !
 
-**Important** : Remplacez toutes les valeurs par vos vraies credentials !
-
-### 4. Déployer
+### Étape 4: Déployer
 
 1. Cliquez sur **"Create Web Service"**
 2. Render va automatiquement :
-   - Cloner votre repository
+   - Cloner votre repo
    - Installer les dépendances
-   - Démarrer le serveur
+   - Démarrer votre serveur
 3. Attendez que le déploiement soit terminé (5-10 minutes)
 
-### 5. Tester l'API
+## ✅ Vérification du Déploiement
 
-Une fois déployé, testez votre API :
+Une fois déployé, votre API sera accessible à :
+```
+https://cinehome-backend.onrender.com
+```
+
+### Tester les Endpoints
 
 ```bash
-# Remplacez YOUR_SERVICE_URL par l'URL fournie par Render
-curl https://YOUR_SERVICE_URL.onrender.com/health
+# Health Check
+curl https://cinehome-backend.onrender.com/health
+
+# API Info
+curl https://cinehome-backend.onrender.com/
+
+# Test Users API
+curl https://cinehome-backend.onrender.com/api/users
 ```
 
-Vous devriez recevoir :
-```json
-{
-  "status": "ok",
-  "time": "2025-11-16T..."
-}
+## 🔄 Déploiement Automatique
+
+Render redéploie automatiquement à chaque push sur la branche `main` :
+
+```bash
+git add .
+git commit -m "Update backend"
+git push origin main
 ```
 
-## 📡 Endpoints Disponibles
+## 📝 Notes Importantes
 
-- `GET /health` - Vérifier l'état du serveur
-- `POST /api/users/register` - Inscription
-- `POST /api/users/login` - Connexion
-- `GET /api/tmdb/*` - Routes TMDB
-- `POST /api/reviews` - Ajouter une review
-- `POST /api/chat` - Chatbot IA (GROQ)
+### Plan Gratuit Render
+- ✅ 750 heures/mois gratuites
+- ⚠️ Le service s'endort après 15 min d'inactivité
+- ⏱️ Premier démarrage après sommeil : 30-60 secondes
+- 💡 Solution : Utilisez un service de ping (UptimeRobot)
 
-## 🔧 Configuration du Frontend
+### Sécurité
+- ✅ Toutes les variables sensibles sont dans l'environnement
+- ✅ `.env` est dans `.gitignore`
+- ✅ CORS configuré pour accepter votre frontend
+- ✅ HTTPS automatique sur Render
 
-Mettez à jour votre frontend pour pointer vers l'URL Render :
-
-```javascript
-// Dans votre config.js ou fichier de configuration
-const API_BASE_URL = 'https://cinehome-backend.onrender.com';
-```
+### Logs
+Pour voir les logs en temps réel :
+1. Dashboard Render → Votre service
+2. Onglet "Logs"
+3. Ou utilisez la CLI Render
 
 ## 🐛 Dépannage
 
-### Le déploiement échoue
-- Vérifiez les logs dans Render Dashboard
-- Assurez-vous que `package.json` est correct
-- Vérifiez que `node_modules` n'est pas commité
+### Le service ne démarre pas
+- Vérifiez les logs dans Render
+- Assurez-vous que toutes les variables d'environnement sont définies
+- Vérifiez que `MONGODB_URI` est correct
 
 ### Erreur de connexion MongoDB
-- Vérifiez votre MONGODB_URI
-- Assurez-vous que 0.0.0.0/0 est whitelisté dans MongoDB Atlas
-- Vérifiez le mot de passe (pas de caractères spéciaux non encodés)
+- Vérifiez que l'IP `0.0.0.0/0` est whitelistée dans MongoDB Atlas
+- Vérifiez vos credentials MongoDB
+- Testez la connexion avec MongoDB Compass
 
-### API lente (Free Tier)
-- Le plan gratuit de Render met le service en veille après 15 min d'inactivité
-- La première requête après inactivité peut prendre 30-60 secondes
-- Solution : Upgrade vers un plan payant ($7/mois)
+### L'API ne répond pas
+- Le service est peut-être en sommeil (plan gratuit)
+- Attendez 30-60 secondes et réessayez
+- Vérifiez le statut dans le dashboard Render
 
-### CORS Errors
-- Ajoutez l'URL de votre frontend dans les variables d'environnement
-- Vérifiez la configuration CORS dans `app.js`
+## 📚 Ressources
 
-## 🔄 Auto-Deploy
+- [Documentation Render](https://render.com/docs)
+- [MongoDB Atlas Setup](https://www.mongodb.com/docs/atlas/getting-started/)
+- [Node.js sur Render](https://render.com/docs/deploy-node-express-app)
 
-Render redéploie automatiquement à chaque push sur la branche `main` !
+## 🔗 URL de Production
 
-Pour désactiver l'auto-deploy :
-1. Settings → Build & Deploy
-2. Décochez "Auto-Deploy"
-
-## 📊 Monitoring
-
-- **Logs** : Render Dashboard → Logs
-- **Metrics** : Render Dashboard → Metrics
-- **Health Check** : Configurez `/health` comme endpoint de santé
-
-## 🔐 Sécurité
-
-✅ **Bonnes pratiques implémentées :**
-- Variables d'environnement pour les secrets
-- JWT pour l'authentification
-- CORS configuré
-- Mots de passe hashés (bcrypt)
-- HTTPS automatique sur Render
-
-## 💰 Coûts
-
-- **Free Tier** : 750 heures/mois (gratuit)
-  - Se met en veille après 15 min d'inactivité
-  - 100 GB de bande passante
-  
-- **Starter ($7/mois)** :
-  - Toujours actif (pas de veille)
-  - Bande passante illimitée
-  - Meilleure performance
-
-## 📝 Checklist Déploiement
-
-- [ ] MongoDB Atlas configuré et accessible
-- [ ] Repository GitHub à jour
-- [ ] Variables d'environnement configurées
-- [ ] Web Service créé sur Render
-- [ ] Déploiement réussi
-- [ ] Endpoint `/health` fonctionne
-- [ ] Frontend mis à jour avec la nouvelle URL
-- [ ] Tests de connexion/inscription fonctionnent
-
-## 🆘 Support
-
-En cas de problème :
-1. Consultez les logs Render
-2. Vérifiez la documentation Render : https://render.com/docs
-3. Testez en local d'abord avec `npm run dev`
-
-## 🎉 Félicitations !
-
-Votre backend CINEHOME est maintenant déployé et accessible publiquement ! 🚀
+Une fois déployé, mettez à jour le frontend avec l'URL :
+```javascript
+const API_URL = 'https://cinehome-backend.onrender.com';
+```
