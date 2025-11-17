@@ -342,6 +342,12 @@
     // Update avatar immediately
     updateAvatarDisplay(profileId);
     
+    // Atualizar contador de favoritos para o novo perfil
+    if (window.Favoritos && typeof window.Favoritos.atualizarContador === 'function') {
+      console.log('Atualizando contador de favoritos para perfil:', profileId);
+      window.Favoritos.atualizarContador();
+    }
+    
     // Close dropdown
     closeDropdown();
   }

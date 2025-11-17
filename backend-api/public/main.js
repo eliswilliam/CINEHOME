@@ -267,6 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userEmail', email);
         
+        // Déclencher l'événement de connexion pour auto-configuration TMDB
+        window.dispatchEvent(new CustomEvent('user-logged-in', {
+          detail: { email, token: data.token }
+        }));
+        
         notify.success('Bem-vindo!', 'Login realizado com sucesso');
         
         setTimeout(() => {

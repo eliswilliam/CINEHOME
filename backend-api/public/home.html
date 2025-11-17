@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="profile-menu.css">
     <link rel="stylesheet" href="notifications.css">
     <link rel="stylesheet" href="confirm-modal.css">
+    <link rel="stylesheet" href="favoritos.css">
+    <link rel="stylesheet" href="movie-details-modal.css">
 
 </head>
 <body>
@@ -41,6 +43,26 @@
         </div>
         
         <div class="header-actions">
+          <!-- Favoritos Menu -->
+          <div class="favoritos-menu-container">
+            <button class="favoritos-btn" id="favoritos-btn" aria-label="Meus Favoritos">
+                <style>
+                .heart-icon path {
+                    fill: none;
+                    stroke: white;
+                    stroke-width: 1.8;
+                    transition: fill 0.25s ease, stroke 0.25s ease;
+                }
+                .heart-icon:hover path {
+                    fill: white;
+                    stroke: white;
+                }
+                </style>
+                <svg class="heart-icon" viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg"> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 c1.74 0 3.41 0.81 4.5 2.09 C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg>
+              <span class="favoritos-count" id="favoritos-count">0</span>
+            </button>
+          </div>
+          
           <!-- Profile Menu -->
           <div class="profile-menu-container">
             <button class="profile-avatar-btn" id="profile-avatar-btn" aria-label="Menu de perfil" aria-haspopup="true" aria-expanded="false">
@@ -136,7 +158,7 @@
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                   </svg>
-                  <span>CINEHOME IA <sup style="background: #EF4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 6px;">NOVO</sup></span>
+                  <span>Assistente Virtual <sup style="background: #EF4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 6px;">NOVO</sup></span>
                 </button>
               </div>
               
@@ -152,7 +174,7 @@
             </div>
           </div>
           
-          <button id="btn-open-settings" class="btn btn-secondary btn-settings" aria-haspopup="dialog" aria-controls="tmdb-settings-modal" aria-label="Configurar TMDB" data-i18n="btn.settings">
+          <button id="btn-open-settings" class="btn btn-secondary btn-settings" aria-haspopup="dialog" aria-controls="tmdb-settings-modal" aria-label="Configurar TMDB" data-i18n="btn.settings" data-full-text="Configurar TMDB" data-short-text="Confi&#10;gurado">
             Configurar TMDB
           </button>
         </div>
@@ -160,12 +182,6 @@
 
     <!-- Capa/Hero com slider, navegação e CTA -->
     <section class="hero has-capa" aria-label="Destaques">
-        <!-- Atalhos no topo da capa -->
-        <nav class="hero-top-pill" aria-label="Atalhos da capa">
-            <a href="#mais-titulos" class="pill-link" data-i18n="hero.watchMore">Mais títulos para assistir</a>
-            <span class="pill-sep" aria-hidden="true"></span>
-            <a href="#planos" class="pill-link" data-i18n="hero.plans">Planos</a>
-        </nav>
         <!-- Faixa de slides do hero; um ativo por vez -->
         <div class="hero-slider" id="hero-slider">
             <div class="hero-slide is-active" data-index="0">
@@ -240,7 +256,7 @@
         <div class="hero-progress" aria-hidden="true"><div class="fill" id="hero-progress-fill"></div></div>
         <!-- CTA: botão principal -->
         <div id="hero-cta" class="hero-cta" role="region" aria-label="Ação principal">
-            <button class="btn btn-primary btn-large" type="button" data-i18n="hero.cta">Assista já</button>
+            <button class="btn btn-primary btn-large" type="button" id="hero-cta-button" data-i18n="hero.cta">Assista já</button>
         </div>
         <!-- Curva decorativa inferior da capa -->
         <div class="hero-curve" aria-hidden="true"></div>
@@ -892,8 +908,10 @@
 <!-- Scripts: autenticação, dados estáticos, interatividade principal, fundo promocional e footer -->
 <script src="config.js"></script>
 <script src="auth.js"></script>
+<script src="auto-config-tmdb.js"></script>
 <script src="data.js"></script>
 <script src="categories-data.js" defer></script>
+<script src="categories-tmdb-manager.js"></script>
 <script src="footer-content.js"></script>
 <script src="search.js"></script>
 <script src="categories.js" defer></script>
@@ -901,6 +919,8 @@
 <script src="profile-menu.js" defer></script>
 <script src="notifications.js"></script>
 <script src="confirm-modal.js"></script>
+<script src="favoritos.js"></script>
+<script src="movie-details-modal.js"></script>
 <script>
   // Proteger a página - redireciona para login se não autenticado
   if (!auth.requireAuth()) {
@@ -917,6 +937,86 @@
       console.log('✅ Perfil ativo:', currentProfile);
     }
   }
+</script>
+<script>
+  // Auto-enrichissement des catégories avec TMDB
+  (async function initTMDBEnrichment() {
+    // Attendre que categories-data.js soit chargé
+    if (!window.CATEGORIES_DATA) {
+      console.log('⏳ En attente de CATEGORIES_DATA...');
+      await new Promise(resolve => {
+        const checkInterval = setInterval(() => {
+          if (window.CATEGORIES_DATA) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+    
+    // Vérifier si TMDB est configuré
+    if (window.CategoriesTMDBManager && CategoriesTMDBManager.init()) {
+      console.log('🔄 Enrichissement automatique des catégories TMDB...');
+      
+      try {
+        // Enrichir seulement si pas déjà enrichi
+        const firstMovie = Object.values(window.CATEGORIES_DATA)[0]?.items[0];
+        if (firstMovie && !firstMovie.tmdb_id) {
+          window.CATEGORIES_DATA = await CategoriesTMDBManager.enrichCategories(window.CATEGORIES_DATA);
+          console.log('✅ Catégories enrichies automatiquement!');
+          
+          // Déclencher un événement personnalisé pour informer que les données sont prêtes
+          window.dispatchEvent(new CustomEvent('categories-enriched', { 
+            detail: { data: window.CATEGORIES_DATA } 
+          }));
+        } else {
+          console.log('✅ Catégories déjà enrichies (depuis le cache)');
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur enrichissement:', error);
+      }
+    } else {
+      console.log('ℹ️ TMDB non configuré - utilisation des données de base');
+    }
+  })();
+</script>
+<script>
+  // Responsive text for settings button
+  function updateSettingsButtonText() {
+    const settingsBtn = document.getElementById('btn-open-settings');
+    if (settingsBtn) {
+      // Verificar se a API já está configurada
+      const apiKey = localStorage.getItem('tmdb_api_key');
+      const isConfigured = !!(apiKey && apiKey.trim().length > 0);
+      
+      if (isConfigured) {
+        // Se configurado, manter "Configurado" independente da tela
+        settingsBtn.textContent = 'Configurado';
+        settingsBtn.classList.remove('btn-secondary');
+        settingsBtn.classList.add('btn-primary', 'tmdb-configurado');
+      } else {
+        // Se não configurado, ajustar texto baseado na largura da tela
+        if (window.innerWidth <= 480) {
+          settingsBtn.textContent = 'TMDB';
+        } else {
+          settingsBtn.textContent = 'Configurar TMDB';
+        }
+        settingsBtn.classList.remove('btn-primary', 'tmdb-configurado');
+        settingsBtn.classList.add('btn-secondary');
+      }
+    }
+  }
+  
+  // Update on load and resize
+  window.addEventListener('load', updateSettingsButtonText);
+  window.addEventListener('resize', updateSettingsButtonText);
+  
+  // Update when storage changes (when API key is saved/removed)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'tmdb_api_key') {
+      updateSettingsButtonText();
+    }
+  });
 </script>
 <script src="index.js" defer></script>
 <script src="promo-bg.js" defer></script>

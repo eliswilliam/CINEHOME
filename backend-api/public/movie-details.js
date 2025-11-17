@@ -860,15 +860,23 @@
         const urlParams = new URLSearchParams(window.location.search);
         const movieTitle = urlParams.get('title');
         const movieId = urlParams.get('id');
+        const mediaType = urlParams.get('type');
         const source = urlParams.get('source'); // Vérifier si c'est un résultat TMDB
         
+        console.log('🔍 PARAMÈTRES URL DÉTECTÉS:');
+        console.log('  - movieId:', movieId);
+        console.log('  - movieTitle:', movieTitle);
+        console.log('  - mediaType:', mediaType);
+        console.log('  - source:', source);
+        console.log('  - URL complète:', window.location.href);
+        
         if (!movieTitle && !movieId) {
-            console.warn('Aucun titre ou ID de film spécifié');
+            console.warn('❌ Aucun titre ou ID de film spécifié');
             showError();
             return;
         }
 
-        console.log('🎬 Chargement des détails:', { movieId, movieTitle, source });
+        console.log('🎬 Chargement des détails:', { movieId, movieTitle, mediaType, source });
 
         // Tenter de charger depuis TMDB directement si un ID est fourni
         if (movieId) {
@@ -878,6 +886,20 @@
                 
                 if (tmdbMovie) {
                     console.log('✅ Détails TMDB chargés avec succès:', tmdbMovie);
+                    console.log('📌 Vérification des données reçues:');
+                    console.log('  - ID reçu:', tmdbMovie.id);
+                    console.log('  - Titre reçu:', tmdbMovie.title);
+                    console.log('  - Année reçue:', tmdbMovie.year);
+                    console.log('  - Type de média:', tmdbMovie.mediaType);
+                    
+                    // VÉRIFICATION CRITIQUE: Est-ce que l'ID correspond?
+                    if (tmdbMovie.id && movieId && tmdbMovie.id.toString() !== movieId.toString()) {
+                        console.error('⚠️⚠️⚠️ ATTENTION: ID NE CORRESPOND PAS!');
+                        console.error('  - ID demandé:', movieId);
+                        console.error('  - ID reçu:', tmdbMovie.id);
+                        console.error('  - Possible confusion de données!');
+                    }
+                    
                     updateMovieInfo(tmdbMovie);
                     return;
                 } else {
@@ -900,9 +922,13 @@
     }
 
     /**
-     * Récupère les détails d'un film depuis TMDB directement (frontend)
+     * Récupère les détails d'un film ou série depuis TMDB directement (frontend)
      */
     async function fetchMovieFromTMDBDirect(movieId) {
+        console.log('🎯 === fetchMovieFromTMDBDirect APPELÉ ===');
+        console.log('  📥 ID reçu:', movieId);
+        console.log('  📥 Type de movieId:', typeof movieId);
+        
         try {
             // Vérifier si une clé API TMDB est disponible
             const apiKey = localStorage.getItem('tmdb_api_key');
@@ -910,13 +936,20 @@
             
             if (!apiKey) {
                 console.error('❌ ERREUR: Pas de clé API TMDB dans localStorage!');
-                console.log('� SOLUTION: Cliquez sur "Configurar TMDB" et insira sua chave API');
+                console.log('💡 SOLUTION: Cliquez sur "Configurar TMDB" et insira sua chave API');
                 return null;
             }
 
-            const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&language=pt-BR&append_to_response=credits,videos,similar`;
+            // Vérifier les paramètres URL pour détecter le type (movie ou tv)
+            const urlParams = new URLSearchParams(window.location.search);
+            const mediaType = urlParams.get('type') || 'movie'; // Par défaut: movie
+            
+            // Construire l'URL selon le type de média
+            const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
+            const url = `https://api.themoviedb.org/3/${endpoint}/${movieId}?api_key=${apiKey}&language=pt-BR&append_to_response=credits,videos,similar`;
+            
             console.log(`📡 URL da requisição TMDB:`, url.replace(apiKey, 'API_KEY_HIDDEN'));
-            console.log(`🎬 Buscando detalhes do filme ID: ${movieId}`);
+            console.log(`🎬 Buscando detalhes do ${mediaType} ID: ${movieId}`);
             
             // Appeler l'API TMDB directement
             const response = await fetch(url, {
@@ -932,22 +965,71 @@
                 console.error(`❌ Erreur TMDB API: ${response.status} ${response.statusText}`);
                 const errorText = await response.text();
                 console.error('📄 Resposta de erro:', errorText);
+                
+                // Si échec avec le type par défaut, essayer l'autre type
+                if (mediaType === 'movie') {
+                    console.log('🔄 Tentativa com tipo "tv" ao invés de "movie"...');
+                    const tvUrl = `https://api.themoviedb.org/3/tv/${movieId}?api_key=${apiKey}&language=pt-BR&append_to_response=credits,videos,similar`;
+                    console.log(`📡 Tentando com endpoint TV:`, tvUrl.replace(apiKey, 'API_KEY_HIDDEN'));
+                    
+                    const tvResponse = await fetch(tvUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    console.log(`📊 Status da resposta TV: ${tvResponse.status} ${tvResponse.statusText}`);
+                    
+                    if (tvResponse.ok) {
+                        const tvData = await tvResponse.json();
+                        console.log('✅✅✅ Sucesso com endpoint "tv"!', tvData);
+                        return formatTMDBMedia(tvData, 'tv');
+                    } else {
+                        const tvErrorText = await tvResponse.text();
+                        console.error('❌ Erro também com endpoint TV:', tvErrorText);
+                    }
+                } else if (mediaType === 'tv') {
+                    // Tentativa reversa: se falhou com TV, tenta com movie
+                    console.log('🔄 Tentativa com tipo "movie" ao invés de "tv"...');
+                    const movieUrl = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&language=pt-BR&append_to_response=credits,videos,similar`;
+                    console.log(`📡 Tentando com endpoint Movie:`, movieUrl.replace(apiKey, 'API_KEY_HIDDEN'));
+                    
+                    const movieResponse = await fetch(movieUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    console.log(`📊 Status da resposta Movie: ${movieResponse.status} ${movieResponse.statusText}`);
+                    
+                    if (movieResponse.ok) {
+                        const movieData = await movieResponse.json();
+                        console.log('✅✅✅ Sucesso com endpoint "movie"!', movieData);
+                        return formatTMDBMedia(movieData, 'movie');
+                    } else {
+                        const movieErrorText = await movieResponse.text();
+                        console.error('❌ Erro também com endpoint Movie:', movieErrorText);
+                    }
+                }
+                
                 throw new Error(`Erreur TMDB: ${response.status}`);
             }
 
             const data = await response.json();
             
             console.log('✅✅✅ Dados COMPLETOS recebidos de TMDB:', data);
-            console.log('📌 Título:', data.title);
-            console.log('📌 Ano:', data.release_date);
+            console.log('📌 Título:', data.title || data.name);
+            console.log('📌 Ano:', data.release_date || data.first_air_date);
             console.log('📌 Avaliação:', data.vote_average);
-            console.log('📌 Duração:', data.runtime, 'minutos');
+            console.log('📌 Duração:', data.runtime || data.episode_run_time, 'minutos');
             console.log('📌 Tem créditos?', !!data.credits);
             console.log('📌 Tem vídeos?', !!data.videos);
             
-            // Formater les données TMDB
-            const formattedMovie = formatTMDBMovie(data);
-            console.log('🎨 Filme FORMATADO para exibição:', formattedMovie);
+            // Formater les données TMDB (supporte films et séries)
+            const formattedMovie = formatTMDBMedia(data, mediaType);
+            console.log('🎨 Mídia FORMATADA para exibição:', formattedMovie);
             
             return formattedMovie;
         } catch (error) {
@@ -988,14 +1070,27 @@
     }
 
     /**
-     * Formate les données TMDB au format de l'application
+     * Formate les données TMDB au format de l'application (supporte films et séries TV)
      */
-    function formatTMDBMovie(data) {
+    function formatTMDBMedia(data, mediaType = 'movie') {
+        console.log('🎨 formatTMDBMedia appelé avec:');
+        console.log('  - mediaType:', mediaType);
+        console.log('  - data.id:', data.id);
+        console.log('  - data.title:', data.title);
+        console.log('  - data.name:', data.name);
+        console.log('  - data.original_title:', data.original_title);
+        console.log('  - data.original_name:', data.original_name);
+        
         // Extraire la bande-annonce YouTube
         const trailerVideo = data.videos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
         
-        // Extraire le réalisateur
-        const director = data.credits?.crew?.find(c => c.job === 'Director')?.name || 'N/A';
+        // Extraire le réalisateur (films) ou créateur (séries)
+        let director = 'N/A';
+        if (mediaType === 'tv') {
+            director = data.created_by?.map(c => c.name).join(', ') || 'N/A';
+        } else {
+            director = data.credits?.crew?.find(c => c.job === 'Director')?.name || 'N/A';
+        }
         
         // Extraire les scénaristes
         const writers = data.credits?.crew?.filter(c => c.job === 'Writer' || c.job === 'Screenplay')
@@ -1004,22 +1099,55 @@
             .join(', ') || 'N/A';
         
         // Formater la durée
-        const duration = data.runtime ? `${Math.floor(data.runtime / 60)}h ${data.runtime % 60}m` : 'N/A';
+        let duration = 'N/A';
+        if (mediaType === 'tv') {
+            // Pour les séries: utiliser episode_run_time ou number_of_episodes
+            const episodeRuntime = data.episode_run_time?.[0];
+            if (episodeRuntime) {
+                duration = `${episodeRuntime}m por episódio`;
+            } else if (data.number_of_episodes) {
+                duration = `${data.number_of_episodes} episódios`;
+            }
+        } else {
+            // Pour les films: utiliser runtime
+            duration = data.runtime ? `${Math.floor(data.runtime / 60)}h ${data.runtime % 60}m` : 'N/A';
+        }
         
-        // Formater le budget et revenue
+        // Formater le budget et revenue (uniquement pour les films)
         const formatCurrency = (amount) => {
             if (!amount || amount === 0) return 'N/A';
             return '$' + amount.toLocaleString('en-US');
         };
 
+        // Titre et date selon le type de média
+        const title = mediaType === 'tv' 
+            ? (data.name || data.original_name) 
+            : (data.title || data.original_title);
+            
+        const releaseDate = mediaType === 'tv' 
+            ? data.first_air_date 
+            : data.release_date;
+            
+        const year = releaseDate ? releaseDate.split('-')[0] : 'N/A';
+
+        // Status adapté au type
+        let status = 'Released';
+        if (mediaType === 'tv') {
+            status = data.status === 'Returning Series' ? 'Returning Series' : 
+                     data.status === 'Ended' ? 'Ended' : 
+                     data.in_production ? 'In Production' : 'Released';
+        } else {
+            status = data.status === 'Released' ? 'Released' : 'Now Playing';
+        }
+
         return {
             id: data.id,
             poster: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : '',
             backdrop: data.backdrop_path ? `https://image.tmdb.org/t/p/original${data.backdrop_path}` : '',
-            title: data.title || data.original_title || 'Título não disponível',
-            year: data.release_date ? data.release_date.split('-')[0] : 'N/A',
-            rating: 'PG-13', // TMDB não fornece rating, usar padrão
-            status: data.status === 'Released' ? 'Released' : 'Now Playing',
+            title: title || 'Título não disponível',
+            year: year,
+            rating: mediaType === 'tv' ? 'TV-14' : 'PG-13', // TMDB não fornece rating, usar padrão
+            status: status,
             duration: duration,
             genres: data.genres?.map(g => g.name).join(', ') || 'N/A',
             tomatometer: Math.round(data.vote_average * 10) || 0,
@@ -1029,15 +1157,23 @@
             synopsis: data.overview || 'Sinopse não disponível',
             director: director,
             writer: writers,
-            releaseDate: data.release_date ? new Date(data.release_date).toLocaleDateString('pt-BR', {
+            releaseDate: releaseDate ? new Date(releaseDate).toLocaleDateString('pt-BR', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'
             }) : 'N/A',
-            budget: formatCurrency(data.budget),
-            revenue: formatCurrency(data.revenue),
-            trailerVideoId: trailerVideo?.key || ''
+            budget: mediaType === 'movie' ? formatCurrency(data.budget) : 'N/A',
+            revenue: mediaType === 'movie' ? formatCurrency(data.revenue) : 'N/A',
+            trailerVideoId: trailerVideo?.key || '',
+            mediaType: mediaType // Stocker le type pour référence future
         };
+    }
+    
+    /**
+     * Alias pour compatibilité avec le code existant
+     */
+    function formatTMDBMovie(data) {
+        return formatTMDBMedia(data, 'movie');
     }
 
     /**
@@ -1154,7 +1290,7 @@
     }
 
     /**
-     * Charge les plateformes de streaming depuis TMDB
+     * Charge les plateformes de streaming depuis TMDB (supporte films et séries)
      */
     async function loadStreamingProviders(movieId) {
         try {
@@ -1165,7 +1301,12 @@
                 return;
             }
 
-            const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/watch/providers?api_key=${apiKey}`);
+            // Vérifier le type de média depuis les paramètres URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const mediaType = urlParams.get('type') || 'movie';
+            const endpoint = mediaType === 'tv' ? 'tv' : 'movie';
+
+            const response = await fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/watch/providers?api_key=${apiKey}`);
             
             if (!response.ok) {
                 throw new Error(`Erreur TMDB: ${response.status}`);

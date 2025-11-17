@@ -185,6 +185,61 @@
 .search-result-rating .stars {
     color: #ffd700;
     letter-spacing: 1px;
+    animation: starsPulse 2s ease-in-out infinite;
+    display: inline-block;
+}
+
+.search-result-rating .stars span {
+    display: inline-block;
+    animation: starFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.5);
+}
+
+@keyframes starFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes starsPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+.search-result-card:hover .stars {
+    animation: starsGlow 0.6s ease-in-out infinite alternate;
+}
+
+.search-result-card:hover .stars span {
+    animation: starBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes starBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-3px) scale(1.1);
+    }
+}
+
+@keyframes starsGlow {
+    from {
+        text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700;
+        transform: scale(1);
+    }
+    to {
+        text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ff8800;
+        transform: scale(1.15);
+    }
 }
 
 .search-result-rating span:last-child {

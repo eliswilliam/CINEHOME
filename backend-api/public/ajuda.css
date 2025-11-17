@@ -278,13 +278,13 @@ html, body {
 .back-btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
+    gap: 8px;
+    padding: 10px 18px;
     background: rgba(85, 85, 255, 0.2);
     color: white;
     text-decoration: none;
     border-radius: 15px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
     transition: all 0.3s ease;
     border: 1px solid rgba(85, 85, 255, 0.4);
@@ -298,6 +298,58 @@ html, body {
     background: rgba(85, 85, 255, 0.3);
     transform: translateX(-5px);
     box-shadow: 0 4px 15px rgba(85, 85, 255, 0.3);
+}
+
+/* Top Icons Bar */
+.top-icons-bar {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 1000;
+}
+
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    color: #e8e8ee;
+    background: #1a1b22;
+    border-radius: 999px;
+    border: 1px solid #00000033;
+    transition: background .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: #242632;
+}
+
+.icon-btn:focus {
+    outline: 2px solid #8d7eff;
+    outline-offset: 2px;
+}
+
+/* Bouton Ajouter (+) */
+.icon-plus {
+    font-size: 20px;
+    font-weight: 300;
+    color: #e8e8ee;
+    line-height: 1;
+}
+
+/* Bouton Notifications (cloche jaune/orange) */
+.notification-btn svg {
+    color: #F5A623;
+}
+
+/* Bouton Profil (violet) */
+.profile-btn svg {
+    color: #8B7FFF;
 }
 
 /* Error Message */
@@ -335,6 +387,7 @@ html, body {
 @media (max-width: 768px) {
     .site-title {
         font-size: 50px;
+        margin-top: 60px;
     }
 
     .ajuda-wrapper {
@@ -372,21 +425,46 @@ html, body {
     }
 
     .back-btn {
-        position: static;
-        margin-bottom: 20px;
-        width: 100%;
-        justify-content: center;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 8px 14px;
+        font-size: 14px;
+        z-index: 1001;
     }
 
     .welcome-message {
         padding: 40px 15px;
         font-size: 14px;
     }
+
+    .top-icons-bar {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        gap: 6px;
+        z-index: 1001;
+    }
+
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .icon-plus {
+        font-size: 18px;
+    }
+
+    .icon-btn svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 @media (max-width: 480px) {
     .site-title {
-        font-size: 40px;
+        font-size: 35px;
+        margin-top: 55px;
     }
 
     .ajuda-wrapper {
@@ -399,5 +477,28 @@ html, body {
 
     .chat-messages {
         height: 300px;
+    }
+
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .top-icons-bar {
+        gap: 5px;
+    }
+
+    .icon-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .icon-plus {
+        font-size: 16px;
+    }
+
+    .icon-btn svg {
+        width: 14px;
+        height: 14px;
     }
 }

@@ -9,14 +9,14 @@ window.CATEGORIES_DATA_ENRICHED = {
         "title": "Parasita",
         "year": "2019",
         "rating": "8.5",
-        "image": "https://image.tmdb.org/t/p/w500/7sfbEnaARXDDhKm0CZ7D7uc2sbo.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/igw938inb6Fy0YVcwIyxQ7Lu5FO.jpg",
         "description": "Uma família pobre se envolve com uma família rica de maneira inesperada."
       },
       {
-        "title": "Shutter Island",
+        "title": "Ilha do Medo",
         "year": "2010",
         "rating": "8.1",
-        "image": "https://www.themoviedb.org/t/p/original/9KQyjFHCHd560vtp7HIkn0fe6MG.jpg",
+        "image": "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/erl801HYIodoIBGZeFk0GTwCUBh.jpg",
         "description": "Um detetive investiga o desaparecimento de uma paciente em um hospital psiquiátrico."
       },
       {
@@ -30,7 +30,7 @@ window.CATEGORIES_DATA_ENRICHED = {
         "title": "Corra!",
         "year": "2017",
         "rating": "7.7",
-        "image": "https://image.tmdb.org/t/p/w500/rkB4LyZHo1NHXFEDHl9vSD9r1lI.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/7XygOiL1LoaLfAbKayGSY5BJQDl.jpg",
         "description": "Um jovem descobre um terrível segredo durante uma visita aos pais de sua namorada."
       },
       {
@@ -112,7 +112,7 @@ window.CATEGORIES_DATA_ENRICHED = {
         "title": "Super Mario Bros. O Filme",
         "year": "2023",
         "rating": "7.1",
-        "image": "https://image.tmdb.org/t/p/w500/9n2tJBplPbgR2ca05hS5CKXwP2c.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/ktU3MIeZtuEVRlMftgp0HMX2WR7.jpg",
         "description": "Mario e Luigi embarcam em uma aventura no Reino dos Cogumelos."
       },
       {
@@ -180,7 +180,7 @@ window.CATEGORIES_DATA_ENRICHED = {
         "title": "Gladiador",
         "year": "2000",
         "rating": "8.5",
-        "image": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/7IOidTxAH2KKiC2dGfeGksme9vK.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/4DUClyGA6OqjXv6yC0Imf6THGfp.jpg",
         "description": "Um general romano busca vingança como gladiador."
       }
     ]
@@ -213,14 +213,14 @@ window.CATEGORIES_DATA_ENRICHED = {
         "title": "Invocação do Mal",
         "year": "2013",
         "rating": "7.5",
-        "image": "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/40nHGUfypLhlr7gJx8At1IbYkaK.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/1NxHKZW5DPbUFtbF3MxbdSyxRqU.jpg",
         "description": "Investigadores paranormais ajudam uma família aterrorizada."
       },
       {
         "title": "It: A Coisa",
         "year": "2017",
         "rating": "7.3",
-        "image": "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/tjMg4m0LpiKkH6ichvDONszwHIo.jpg",
         "description": "Um grupo de crianças enfrenta uma entidade que assume a forma de palhaço."
       },
       {

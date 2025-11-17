@@ -9,9 +9,74 @@
   <link rel="stylesheet" href="layout.css">
   <link rel="stylesheet" href="notifications.css">
   <style>
+    :root{
+      --bg: #0f0f12;
+      --panel: #1a1b22;
+      --panel-2: #242632;
+      --text: #e8e8ee;
+      --muted: #a7a7b3;
+      --accent: #7a61ff;
+      --outline: #8d7eff;
+    }
+
+    /* Acessibilidade: oculto visual */
+    .visually-hidden{
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,1px,1px);
+      white-space: nowrap; border: 0;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 64px;
+      background: transparent;
+      border-right: none;
+      display: flex;
+      z-index: 1000;
+    }
+    .sidebar__nav{ width: 100%; }
+    .sidebar__list{
+      list-style: none;
+      margin: 0;
+      padding: 12px 0;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .sidebar__item{ width: 100%; }
+    .sidebar__link{
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 48px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 24px;
+      border-left: 3px solid transparent;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .sidebar__link[aria-current="page"]{
+      border-left-color: var(--accent);
+    }
+    .sidebar__link:hover,
+    .sidebar__link:focus{
+      background: var(--panel-2);
+      outline: none;
+    }
+
+    @media (max-width: 600px){
+      .sidebar{ width: 56px; }
+      .sidebar__link{ height: 44px; font-size: 20px; }
+    }
+
     .account-wrapper {
       max-width: 600px;
       width: 90%;
+      margin-left: 80px;
     }
 
     .account-header {
@@ -124,25 +189,30 @@
       box-shadow: none;
     }
 
-    .back-to-home {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    .back-to-home a {
-      color: #5555FF;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.3s ease;
+    .back-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      padding: 10px 18px;
+      background: rgba(85, 85, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 15px;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(85, 85, 255, 0.4);
+      margin-bottom: 20px;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1001;
     }
 
-    .back-to-home a:hover {
-      color: #7676f7;
+    .back-btn:hover {
+      background: rgba(85, 85, 255, 0.3);
       transform: translateX(-5px);
+      box-shadow: 0 4px 15px rgba(85, 85, 255, 0.3);
     }
 
     .success-message, .error-message {
@@ -230,6 +300,15 @@
         height: 35px;
       }
 
+      .back-btn {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 8px 14px;
+        font-size: 14px;
+        z-index: 1001;
+      }
+
       .field input {
         font-size: 14px;
         padding: 12px 15px;
@@ -247,14 +326,6 @@
 
       .field-group .field {
         width: 100%;
-      }
-
-      .back-to-home {
-        margin-top: 20px;
-      }
-
-      .back-to-home a {
-        font-size: 13px;
       }
     }
 
@@ -296,10 +367,50 @@
         width: 32px;
         height: 32px;
       }
+
+      .back-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 <body>
+<a href="home.html" class="back-btn">← Voltar</a>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <nav class="sidebar__nav">
+    <ul class="sidebar__list">
+      <li class="sidebar__item">
+        <a href="home.html" class="sidebar__link" aria-label="Accueil">
+          <span class="visually-hidden">Accueil</span>
+        </a>
+      </li>
+      <li class="sidebar__item">
+        <a href="categories.html" class="sidebar__link" aria-label="Catégories" style="pointer-events: none;">
+          <span class="visually-hidden">Catégories</span>
+        </a>
+      </li>
+      <li class="sidebar__item">
+        <a href="favoritos.html" class="sidebar__link" aria-label="Favoris" style="pointer-events: none;">
+          <span class="visually-hidden">Favoris</span>
+        </a>
+      </li>
+      <li class="sidebar__item">
+        <a href="notifications.html" class="sidebar__link" aria-label="Notifications" style="pointer-events: none;">
+          <span class="visually-hidden">Notifications</span>
+        </a>
+      </li>
+      <li class="sidebar__item">
+        <a href="conta.html" class="sidebar__link" aria-current="page" aria-label="Paramètres">
+          <span class="visually-hidden">Paramètres</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
 <h1 class="site-title">
   <span class="cine">CINE</span><span class="home">HOME</span>
 </h1>
@@ -383,16 +494,6 @@
         </button>
       </div>
     </form>
-  </div>
-
-  <!-- Botão de voltar -->
-  <div class="back-to-home">
-    <a href="home.html">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Voltar para Home
-    </a>
   </div>
 </div>
 

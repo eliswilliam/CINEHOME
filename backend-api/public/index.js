@@ -95,7 +95,8 @@ function mapMedia(item) {
     rating,
     poster: item.poster_path ? `${TMDB_IMG.posterBase}${item.poster_path}` : '',
     backdrop: item.backdrop_path ? `${TMDB_IMG.backdropBase}${item.backdrop_path}` : '',
-    overview: item.overview || ''
+    overview: item.overview || '',
+    mediaType: item.media_type || (item.title ? 'movie' : 'tv') // Détecter le type
   };
 }
 
@@ -127,9 +128,12 @@ function buildCard(item, carouselId) {
   btn.type = 'button';
   btn.setAttribute('aria-label', `Título: ${item.title}`);
   btn.setAttribute('data-carousel-id', carouselId);
-  // Armazenar o ID TMDB se disponível
+  // Armazenar o ID TMDB et le type de média si disponibles
   if (item.id) {
     btn.setAttribute('data-tmdb-id', item.id);
+  }
+  if (item.mediaType) {
+    btn.setAttribute('data-media-type', item.mediaType);
   }
   const imgSrc = item.poster || item.backdrop || '';
   btn.innerHTML = `
@@ -170,9 +174,12 @@ async function populateFromTMDB() {
         const slide = document.createElement('div');
         slide.className = 'hero-slide' + (idx === 0 ? ' is-active' : '');
         slide.setAttribute('data-index', String(idx));
-        // Armazenar o ID TMDB no slide
+        // Armazenar o ID TMDB e o tipo de média no slide
         if (h.id) {
           slide.setAttribute('data-tmdb-id', h.id);
+        }
+        if (h.mediaType) {
+          slide.setAttribute('data-media-type', h.mediaType);
         }
         const imgSrc = h.backdrop || h.poster;
         slide.innerHTML = `
@@ -404,14 +411,17 @@ class MovieCarousel {
   selectMovie(card) {
     const title = card.querySelector('.movie-title')?.textContent || 'Filme selecionado';
     const tmdbId = card.getAttribute('data-tmdb-id');
+    const mediaType = card.getAttribute('data-media-type') || 'movie';
+    
+    console.log('🎬 Carte sélectionnée:', { title, tmdbId, mediaType });
     
     // Animação visual breve antes da redireção
     card.style.transform = `scale(${UI_CONST.CARD_SELECT_SCALE})`;
     
     setTimeout(() => {
-      // Redirecionar para a página de detalhes
+      // Redirecionar para a página de detalhes avec le type de média
       if (tmdbId) {
-        window.location.href = `movie-details.html?id=${tmdbId}&title=${encodeURIComponent(title)}`;
+        window.location.href = `movie-details.html?id=${tmdbId}&type=${mediaType}&title=${encodeURIComponent(title)}`;
       } else if (title) {
         window.location.href = `movie-details.html?title=${encodeURIComponent(title)}`;
       }
@@ -732,6 +742,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         const slide = document.createElement('div');
         slide.className = 'hero-slide' + (idx === 0 ? ' is-active' : '');
         slide.setAttribute('data-index', String(idx));
+        // Ajouter les attributs TMDB si disponibles
+        if (h.id || h.tmdbId) {
+          slide.setAttribute('data-tmdb-id', h.id || h.tmdbId);
+        }
+        if (h.mediaType || h.type) {
+          slide.setAttribute('data-media-type', h.mediaType || h.type || 'movie');
+        }
         slide.innerHTML = `
           <img class="hero-image" src="${h.image}" alt="Destaque: ${h.title}" loading="lazy" />
           <div class="hero-gradient"></div>
@@ -763,8 +780,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   window.heroSlider = new HeroSlider('#hero-slider', { interval: UI_CONST.AUTOPLAY_INTERVAL_MS });
   console.log('HeroSlider inicializado');
 
-  // ===== UI: Modal de Configuração TMDB =====
-  // Modal simples para salvar/limpar a API key no localStorage.
   const modal = document.getElementById('tmdb-settings-modal');
   const btnOpen = document.getElementById('btn-open-settings');
   const input = document.getElementById('tmdb-key-input');
@@ -778,7 +793,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     lastFocus = document.activeElement;
     modal.hidden = false;
     setTimeout(() => input && input.focus(), 0);
-    // Preencher valor atual
     try { input.value = localStorage.getItem('tmdb_api_key') || ''; } catch (_) { input.value = ''; }
   }
   function closeModal() {
@@ -795,12 +809,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   btnSave && btnSave.addEventListener('click', async () => {
     try { localStorage.setItem('tmdb_api_key', input.value.trim()); } catch (_) {}
     closeModal();
-    // Recarregar conteúdo via TMDB
+    if (typeof TMDBConfig !== 'undefined') {
+      TMDBConfig.atualizarBotaoTMDB();
+    }
     location.reload();
   });
   btnClear && btnClear.addEventListener('click', () => {
     try { localStorage.removeItem('tmdb_api_key'); } catch (_) {}
     closeModal();
+    if (typeof TMDBConfig !== 'undefined') {
+      TMDBConfig.atualizarBotaoTMDB();
+    }
     location.reload();
   });
 
@@ -838,4 +857,36 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (ev.key === 'ArrowLeft') { ev.preventDefault(); window.movieCarousel.navigate(carouselId, -1); }
     if (ev.key === 'ArrowRight') { ev.preventDefault(); window.movieCarousel.navigate(carouselId, 1); }
   });
+
+  // Gestionnaire pour le bouton "Assista já" du hero-cta
+  const heroCTAButton = document.getElementById('hero-cta-button');
+  if (heroCTAButton) {
+    heroCTAButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Récupérer le slide actif du hero
+      const activeSlide = document.querySelector('.hero-slide.is-active');
+      if (!activeSlide) {
+        console.warn('Aucun slide actif trouvé');
+        return;
+      }
+      
+      // Extraire les informations du film du slide actif
+      const title = activeSlide.querySelector('.hero-title')?.textContent.trim();
+      const tmdbId = activeSlide.getAttribute('data-tmdb-id');
+      const mediaType = activeSlide.getAttribute('data-media-type') || 'movie';
+      
+      console.log('🎬 Hero CTA cliqué:', { title, tmdbId, mediaType });
+      
+      if (tmdbId) {
+        // Si un ID TMDB est disponible, l'utiliser en priorité avec le type
+        window.location.href = `movie-details.html?id=${tmdbId}&type=${mediaType}&title=${encodeURIComponent(title)}`;
+      } else if (title) {
+        // Sinon, utiliser le titre pour la base locale
+        window.location.href = `movie-details.html?title=${encodeURIComponent(title)}`;
+      } else {
+        console.warn('Aucun titre trouvé pour le slide actif');
+      }
+    });
+  }
 });

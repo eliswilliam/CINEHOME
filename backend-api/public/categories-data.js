@@ -3,8 +3,8 @@ window.CATEGORIES_DATA = {
   suspense: {
     title: 'SUSPENSE',
     items: [
-      { title: 'Parasita', year: '2019', rating: '8.5', image: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/igw938inb6Fy0YVcwIyxQ7Lu5FO.jpg', description: 'Uma família pobre se envolve com uma família rica de maneira inesperada.' },
-      { title: 'Ilha do Medo', year: '2010', rating: '8.1', image: 'https://media.themoviedb.org/t/p/w300_and_h450_bestv2/erl801HYIodoIBGZeFk0GTwCUBh.jpg', description: 'Um detetive investiga o desaparecimento de uma paciente em um hospital psiquiátrico.' },
+      { title: 'Parasita', year: '2019', rating: '8.5', image: 'https://image.tmdb.org/t/p/w500/7sfbEnaARXDDhKm0CZ7D7uc2sbo.jpg', description: 'Uma família pobre se envolve com uma família rica de maneira inesperada.' },
+      { title: 'Shutter Island', year: '2010', rating: '8.1', image: 'https://www.themoviedb.org/t/p/original/9KQyjFHCHd560vtp7HIkn0fe6MG.jpg', description: 'Um detetive investiga o desaparecimento de uma paciente em um hospital psiquiátrico.' },
       { title: 'Prisioneiros', year: '2013', rating: '8.1', image: 'https://uploads.spiritfanfiction.com/historias/capas/202106/prisioneiros-22512319-180620211557.jpg', description: 'Um pai desesperado busca sua filha desaparecida.' },
       { title: 'Corra!', year: '2017', rating: '7.7', image: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/7XygOiL1LoaLfAbKayGSY5BJQDl.jpg', description: 'Um jovem descobre um terrível segredo durante uma visita aos pais de sua namorada.' },
       { title: 'Zodíaco', year: '2007', rating: '7.7', image: 'https://media.themoviedb.org/t/p/w300_and_h450_bestv2/A1v88ZW4YxFWx6ewFiJP19NAC4x.jpg', description: 'A caça ao serial killer que aterrorizou São Francisco.' },

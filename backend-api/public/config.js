@@ -1,12 +1,6 @@
-// Configuration pour CINEHOME Frontend
 const CONFIG = {
-  // URL do backend - altere conforme necessário
-    API_BASE_URL: 'https://cinemaf.onrender.com', // Backend em produção no Render
+  API_BASE_URL: 'https://cinemaf.onrender.com',
   
-  // Para desenvolvimento local, altere para:
-  // API_BASE_URL: 'http://localhost:3001',
-  
-  // Endpoints da API
   ENDPOINTS: {
     LOGIN: '/api/users/login',
     REGISTER: '/api/users/register',
@@ -16,20 +10,17 @@ const CONFIG = {
     HEALTH: '/health'
   },
   
-  // Configurações gerais
   SETTINGS: {
-    REQUEST_TIMEOUT: 12000, // 12 segundos
+    REQUEST_TIMEOUT: 12000,
     PASSWORD_MIN_LENGTH: 6,
     CODE_LENGTH: 6
   }
 };
 
-// Função helper para construir URLs completas
 function getApiUrl(endpoint) {
   return CONFIG.API_BASE_URL + CONFIG.ENDPOINTS[endpoint];
 }
 
-// Verificar se o backend está disponível
 async function checkBackendHealth() {
   try {
     const response = await fetch(getApiUrl('HEALTH'), {
@@ -42,6 +33,53 @@ async function checkBackendHealth() {
     return false;
   }
 }
+
+const TMDBConfig = {
+  verificarConfiguracao() {
+    try {
+      const apiKey = localStorage.getItem('tmdb_api_key');
+      return !!(apiKey && apiKey.trim().length > 0);
+    } catch (error) {
+      console.error('Erro ao verificar configuração TMDB:', error);
+      return false;
+    }
+  },
+  
+  atualizarBotaoTMDB() {
+    const botao = document.getElementById('btn-open-settings');
+    if (!botao) return;
+    
+    const configurado = this.verificarConfiguracao();
+    
+    if (configurado) {
+      botao.textContent = 'Configurado';
+      botao.classList.remove('btn-secondary');
+      botao.classList.add('btn-primary', 'tmdb-configurado');
+      botao.title = 'Clique para gerenciar configuração TMDB';
+    } else {
+      botao.textContent = 'Configurar TMDB';
+      botao.classList.remove('btn-primary', 'tmdb-configurado');
+      botao.classList.add('btn-secondary');
+      botao.title = 'Configurar TMDB';
+    }
+  },
+  
+  init() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.atualizarBotaoTMDB());
+    } else {
+      this.atualizarBotaoTMDB();
+    }
+    
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'tmdb_api_key') {
+        this.atualizarBotaoTMDB();
+      }
+    });
+  }
+};
+
+TMDBConfig.init();
 
 console.log('🔧 Configuração carregada:', {
   baseUrl: CONFIG.API_BASE_URL,

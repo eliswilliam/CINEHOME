@@ -106,18 +106,82 @@
                 <h1 class="category-title">${categoryData.title}</h1>
             </div>
             <div class="category-grid">
-                ${categoryData.items.map(item => createCardHTML(item)).join('')}
+                ${categoryData.items.map((item, index) => createCardHTML(item, index)).join('')}
             </div>
         `;
         
         categorySection.innerHTML = html;
         categorySection.classList.add('active');
         
+        // Attacher les événements de clic aux cartes
+        attachCardClickEvents(category);
+        
         // Scroll vers le haut avec animation fluide
         const categoryNav = document.querySelector('.category-nav');
         if (categoryNav) {
             categoryNav.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    }
+    
+    // Attacher les événements de clic aux cartes
+    function attachCardClickEvents(category) {
+        const cards = categorySection.querySelectorAll('.category-card');
+        cards.forEach(card => {
+            card.addEventListener('click', async function() {
+                const index = parseInt(this.dataset.movieIndex);
+                const movieData = window.CATEGORIES_DATA[category].items[index];
+                
+                if (!movieData) {
+                    console.error('Film non trouvé à l\'index:', index);
+                    return;
+                }
+
+                // Vérifier si on a le TMDB ID
+                if (movieData.tmdb_id) {
+                    // Rediriger vers movie-details.html avec les paramètres id et title
+                    const encodedTitle = encodeURIComponent(movieData.title);
+                    window.location.href = `movie-details.html?id=${movieData.tmdb_id}&title=${encodedTitle}`;
+                } else {
+                    // Si pas de TMDB ID, essayer d'enrichir le film d'abord
+                    console.log('Enrichissement du film avant redirection:', movieData.title);
+                    
+                    // Afficher un indicateur de chargement temporaire
+                    this.style.opacity = '0.6';
+                    this.style.pointerEvents = 'none';
+                    
+                    try {
+                        // Essayer d'enrichir via le manager TMDB
+                        if (window.categoriesTMDBManager) {
+                            const enrichedMovie = await window.categoriesTMDBManager.enrichMovie(movieData);
+                            
+                            if (enrichedMovie && enrichedMovie.tmdb_id) {
+                                // Mise à jour dans CATEGORIES_DATA
+                                window.CATEGORIES_DATA[category].items[index] = enrichedMovie;
+                                
+                                // Redirection avec le TMDB ID nouvellement obtenu
+                                const encodedTitle = encodeURIComponent(enrichedMovie.title);
+                                window.location.href = `movie-details.html?id=${enrichedMovie.tmdb_id}&title=${encodedTitle}`;
+                                return;
+                            }
+                        }
+                        
+                        // Fallback: utiliser le titre pour la recherche sur movie-details.html
+                        const encodedTitle = encodeURIComponent(movieData.title);
+                        window.location.href = `movie-details.html?title=${encodedTitle}`;
+                        
+                    } catch (error) {
+                        console.error('Erreur lors de l\'enrichissement:', error);
+                        // Fallback: rediriger quand même avec le titre
+                        const encodedTitle = encodeURIComponent(movieData.title);
+                        window.location.href = `movie-details.html?title=${encodedTitle}`;
+                    } finally {
+                        // Restaurer l'état original (au cas où la redirection échoue)
+                        this.style.opacity = '1';
+                        this.style.pointerEvents = 'auto';
+                    }
+                }
+            });
+        });
     }
 
     // Générer les étoiles en fonction de la note
@@ -136,15 +200,23 @@
     }
 
     // Créer le HTML d'une carte
-    function createCardHTML(item) {
+    function createCardHTML(item, index) {
+        const hasEnrichedData = !!item.tmdb_id;
+        
         return `
-            <div class="category-card" onclick="window.location.href='movie-details.html?title=${encodeURIComponent(item.title)}'" style="cursor: pointer;">
+            <div class="category-card" 
+                 data-movie-index="${index}" 
+                 style="cursor: pointer; ${hasEnrichedData ? 'border: 2px solid rgba(16, 185, 129, 0.5);' : ''}"
+                 title="${hasEnrichedData ? 'Données enrichies TMDB disponibles ✨' : 'Cliquez pour voir les détails'}">
                 <img class="category-card-image" 
                      src="${item.image}" 
                      alt="${item.title}"
                      loading="lazy">
                 <div class="category-card-overlay">
-                    <h3 class="category-card-title">${item.title}</h3>
+                    <h3 class="category-card-title">
+                        ${item.title}
+                        ${hasEnrichedData ? '<span style="color: #10b981; margin-left: 8px;">✨</span>' : ''}
+                    </h3>
                     <div class="category-card-info">
                         <span class="category-card-year">${item.year}</span>
                         ${item.rating !== '—' ? `
