@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const emailRoutes = require('./email');
 const emailService = require('./services/emailService');
+const groqRoutes = require('./groqai');
 
 const app = express();
 
@@ -46,6 +47,9 @@ app.use('/api/users', userRoutes);
 
 // Rotas Reviews (Avaliações)
 app.use('/api/reviews', reviewRoutes);
+
+// Rotas Chat/Groq AI
+app.use('/api', groqRoutes);
 
 // Rotas OAuth
 app.use('/', emailRoutes);
