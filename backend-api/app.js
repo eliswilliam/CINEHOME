@@ -56,11 +56,12 @@ console.log('📁 Servindo arquivos estáticos de:', publicPath);
 app.use(express.static(publicPath));
 
 // Rota catch-all: servir index.html para todas as rotas não-API (SPA)
-app.get('/*', (req, res) => {
+app.use((req, res, next) => {
   // Não interceptar rotas de API
   if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/health')) {
     return res.status(404).json({ message: 'Endpoint não encontrado' });
   }
+  // Servir index.html para todas as outras rotas (SPA)
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
