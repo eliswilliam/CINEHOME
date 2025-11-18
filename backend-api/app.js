@@ -69,12 +69,13 @@ app.use((req, res, next) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Porta do .env ou valor padrão
-const PORT = process.env.PORT || 3000;
+// Porta do .env ou valor padrão (10000 para Render)
+const PORT = process.env.PORT || 10000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Inicialização do servidor
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Servidor iniciado em http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Servidor iniciado em http://${HOST}:${PORT}`);
   console.log(`📂 Servidor HTTP em escuta...`);
   
   // Testar configuração de email de maneira assíncrona sem bloquear
@@ -92,6 +93,13 @@ const server = app.listen(PORT, () => {
       console.warn('⚠️  O sistema funcionará em modo desenvolvimento.\n');
     });
 });
+
+// Configurar timeouts para evitar WORKER TIMEOUT e Connection reset
+// Render recomenda 120 segundos (120000ms) para evitar timeouts
+server.keepAliveTimeout = 120000; // 120 segundos
+server.headersTimeout = 120000;   // 120 segundos
+
+console.log(`⏱️  Timeouts configurados: keepAlive=${server.keepAliveTimeout}ms, headers=${server.headersTimeout}ms`);
 
 server.on('error', (error) => {
   console.error('❌ Erro do servidor:', error);
