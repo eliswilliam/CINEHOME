@@ -12,4 +12,4 @@ jobs:
       - name: Ping Render App
         run: |
           curl -I https://cinehome.onrender.com
-          echo "Ping effectué"
+          echo "Ping complete"
