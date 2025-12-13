@@ -215,7 +215,7 @@ A CINEHOME é uma plataforma moderna de avaliação de filmes e séries que ofer
 
 4. **Sistema de notas transparente**: ⭐ Nossa escala de avaliação de 0 a 10 ajuda você a identificar rapidamente os melhores filmes.
 
-5. **Comunidade ativa**: 👥 Compartilhe suas opiniões e descubra o que outros cinéfilos estão assistindo.
+5. **Comunidade ativa**: 👥 Compartilhe suas opiniões e descubra o que outros membros CINEHOME estão assistindo.
 
 **O que você pode fazer na CINEHOME:**
 - 🔍 Pesquisar filmes e séries

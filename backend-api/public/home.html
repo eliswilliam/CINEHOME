@@ -57,9 +57,28 @@
                     fill: white;
                     stroke: white;
                 }
+                .social-icon path {
+                    fill: none;
+                    stroke: white;
+                    stroke-width: 1.8;
+                    transition: all 0.25s ease;
+                }
+                .social-icon:hover path {
+                    stroke: #5f5dff;
+                }
                 </style>
                 <svg class="heart-icon" viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg"> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 c1.74 0 3.41 0.81 4.5 2.09 C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg>
               <span class="favoritos-count" id="favoritos-count">0</span>
+            </button>
+          </div>
+
+          <!-- Social Feed Button -->
+          <div class="social-menu-container">
+            <button class="social-btn" id="social-btn" aria-label="Comunidade CINEHOME" title="Comunidade CINEHOME">
+              <svg class="social-icon" viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span class="social-badge" id="social-badge" style="display: none;">3</span>
             </button>
           </div>
           
@@ -738,7 +757,7 @@
             <p>O CineHome é uma plataforma líder em avaliação e crítica de filmes e séries, fundada em 2024 com a missão de ajudar espectadores a descobrir e avaliar o melhor conteúdo audiovisual.</p>
             
             <h2>Nossa Missão</h2>
-            <p>Fornecer avaliações confiáveis e recomendações personalizadas através de inteligência artificial avançada, análises detalhadas e uma comunidade engajada de cinéfilos.</p>
+            <p>Fornecer avaliações confiáveis e recomendações personalizadas através de inteligência artificial avançada, análises detalhadas e uma comunidade engajada CINEHOME.</p>
             
             <h2>Nossos Valores</h2>
             <ul>
@@ -981,46 +1000,68 @@
   })();
 </script>
 <script>
-  // Responsive text for settings button
-  function updateSettingsButtonText() {
-    const settingsBtn = document.getElementById('btn-open-settings');
-    if (settingsBtn) {
-      // Verificar se a API já está configurada
-      const apiKey = localStorage.getItem('tmdb_api_key');
-      const isConfigured = !!(apiKey && apiKey.trim().length > 0);
-      
-      if (isConfigured) {
-        // Se configurado, manter "Configurado" independente da tela
-        settingsBtn.textContent = 'Configurado';
-        settingsBtn.classList.remove('btn-secondary');
-        settingsBtn.classList.add('btn-primary', 'tmdb-configurado');
-      } else {
-        // Se não configurado, ajustar texto baseado na largura da tela
-        if (window.innerWidth <= 480) {
-          settingsBtn.textContent = 'TMDB';
+  // Configurer automatiquement la clé API TMDB et désactiver le bouton
+  (function() {
+    const TMDB_API_KEY = '0195eb509bb44f3857d46334a34f118c';
+    
+    // Mettre la clé dans localStorage si elle n'y est pas
+    if (!localStorage.getItem('tmdb_api_key')) {
+      localStorage.setItem('tmdb_api_key', TMDB_API_KEY);
+      console.log('🔑 Clé API TMDB configurée automatiquement');
+    }
+    
+    // Fonction pour mettre à jour le bouton
+    function updateSettingsButtonText() {
+      const settingsBtn = document.getElementById('btn-open-settings');
+      if (settingsBtn) {
+        const apiKey = localStorage.getItem('tmdb_api_key');
+        const isConfigured = !!(apiKey && apiKey.trim().length > 0);
+        
+        if (isConfigured) {
+          // Se configurado, manter "Configurado" independente da tela
+          settingsBtn.textContent = 'Configurado';
+          settingsBtn.classList.remove('btn-secondary');
+          settingsBtn.classList.add('btn-primary', 'tmdb-configurado');
+          settingsBtn.disabled = true;
+          settingsBtn.setAttribute('aria-disabled', 'true');
         } else {
-          settingsBtn.textContent = 'Configurar TMDB';
+          // Se não configurado, ajustar texto baseado na largura da tela
+          if (window.innerWidth <= 480) {
+            settingsBtn.textContent = 'TMDB';
+          } else {
+            settingsBtn.textContent = 'Configurar TMDB';
+          }
+          settingsBtn.disabled = false;
+          settingsBtn.removeAttribute('aria-disabled');
+          settingsBtn.classList.remove('btn-primary', 'tmdb-configurado');
+          settingsBtn.classList.add('btn-secondary');
         }
-        settingsBtn.classList.remove('btn-primary', 'tmdb-configurado');
-        settingsBtn.classList.add('btn-secondary');
       }
     }
-  }
-  
-  // Update on load and resize
-  window.addEventListener('load', updateSettingsButtonText);
-  window.addEventListener('resize', updateSettingsButtonText);
-  
-  // Update when storage changes (when API key is saved/removed)
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'tmdb_api_key') {
+    
+    // Mettre à jour le bouton au chargement
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateSettingsButtonText);
+    } else {
       updateSettingsButtonText();
     }
-  });
+    
+    // Update on load and resize
+    window.addEventListener('load', updateSettingsButtonText);
+    window.addEventListener('resize', updateSettingsButtonText);
+    
+    // Update when storage changes (when API key is saved/removed)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'tmdb_api_key') {
+        updateSettingsButtonText();
+      }
+    });
+  })();
 </script>
 <script src="index.js" defer></script>
 <script src="promo-bg.js" defer></script>
 <script src="footer.js" defer></script>
 <script src="script.js" defer></script>
+<script src="social-navigation.js" defer></script>
 </body>
 </html

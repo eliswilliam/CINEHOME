@@ -214,63 +214,82 @@ body {
 @media (max-width: 768px) {
   .brand-logo { font-size: 1.4rem; }
   .btn-login { padding: 8px 12px; font-weight: 600; }
-  .site-header { padding: 10px 0; }
+  
+  .site-header { 
+    padding: 10px 0;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
   
   .search-container {
-    max-width: 250px;
-    margin: 0 10px;
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
   }
   
   .search-input {
-    font-size: 13px;
-    padding: 8px 40px 8px 14px;
+    font-size: 14px;
+    padding: 10px 45px 10px 16px;
   }
   
-  /* Réduire l'espace entre favoritos, profil et configurar TMDB sur tablette */
   .header-actions {
-    gap: 6px !important;
+    gap: 8px !important;
+    order: 2;
+  }
+  
+  .brand-logo {
+    order: 1;
   }
   
   .btn-settings {
-    font-size: 0.8rem;
-    padding: 7px 10px;
+    font-size: 0.85rem;
+    padding: 7px 12px;
   }
 }
 
 /* Media query pour Android/mobile */
 @media (max-width: 480px) {
-  /* Réduire encore plus l'espace entre les éléments sur mobile */
-  .header-actions {
-    gap: 4px !important;
+  .site-header {
+    padding: 10px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .brand-logo {
+    order: 1;
+    font-size: 1.3rem;
     flex-shrink: 0;
   }
   
-  .btn-settings {
-    font-size: 0.75rem !important;
-    padding: 6px 8px !important;
-    white-space: nowrap !important;
-    line-height: 1 !important;
-    text-align: center;
-    min-width: auto;
-    max-width: none;
-    height: auto;
+  .header-actions {
+    order: 2;
+    gap: 6px !important;
     flex-shrink: 0;
   }
   
   .search-container {
-    max-width: 160px;
-    margin: 0 4px;
-    flex-shrink: 1;
-  }
-  
-  .site-header {
-    padding: 8px 4px;
-    overflow: visible;
-  }
-  
-  .brand-logo {
-    font-size: 1.2rem;
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     flex-shrink: 0;
+  }
+  
+  .search-input {
+    font-size: 14px;
+    padding: 10px 45px 10px 16px;
+  }
+  
+  .btn-settings {
+    font-size: 0.8rem !important;
+    padding: 7px 10px !important;
+    white-space: nowrap !important;
+  }
+  
+  .btn-login {
+    padding: 7px 10px;
+    font-size: 0.85rem;
   }
 }
 
@@ -306,6 +325,52 @@ body {
 .btn-settings.tmdb-configurado:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(95, 93, 255, 0.45);
+}
+
+/* ===== Social Button in Header ===== */
+.social-menu-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.social-btn {
+    position: relative;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.social-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.social-btn:active {
+    transform: translateY(0);
+}
+
+.social-badge {
+    position: absolute;
+    top: -5px;
+    right: 5px;
+    background: #5f5dff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 /* ===== Category Navigation ===== */

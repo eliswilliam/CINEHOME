@@ -29,13 +29,13 @@
         const apiKey = localStorage.getItem('tmdb_api_key');
         
         if (apiKey && apiKey.trim().length > 0) {
-            console.log('? Cl� API TMDB trouv�e dans localStorage - recherche TMDB activ�e');
+            console.log('🔑 Clé API TMDB trouvée dans localStorage - recherche TMDB activée');
             tmdbAvailable = true;
-            updateSearchIndicator(true);
+            // updateSearchIndicator(true); // Icône TMDB supprimée
         } else {
-            console.log('?? Pas de cl� API TMDB - utilisation du catalogue local');
+            console.log('❌ Pas de clé API TMDB - utilisation du catalogue local');
             tmdbAvailable = false;
-            updateSearchIndicator(false);
+            // updateSearchIndicator(false); // Icône LOCAL supprimée
         }
     }
 
@@ -145,14 +145,6 @@
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') performSearch();
         });
-        let searchTimeout = null;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            const query = this.value.trim();
-            if (query.length >= 3) {
-                searchTimeout = setTimeout(performSearch, 500);
-            }
-        });
     }
 
     function performSearch() {
@@ -225,10 +217,10 @@
                     description: item.overview || 'Sinopse não disponível',
                     image: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
                     mediaType: item.media_type, // 'movie' ou 'tv'
-                section: 'TMDB',
-                tmdbId: movie.id,
-                source: 'tmdb'
-            }));
+                    section: 'TMDB',
+                    tmdbId: item.id,
+                    source: 'tmdb'
+                }));
 
             console.log(`? ${tmdbResults.length} r�sultats TMDB re�us`);
             displayResults(tmdbResults, 'TMDB');

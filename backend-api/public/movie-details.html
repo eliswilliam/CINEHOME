@@ -240,6 +240,34 @@
         </div>
     </div>
 
+    <!-- Seção de Elenco -->
+    <div class="section cast-section" id="cast-container" hidden>
+        <h2 class="section-title">Elenco Principal</h2>
+        <div id="cast-grid" class="cast-grid"></div>
+    </div>
+
+    <!-- Seção de Filmes Similares/Recomendações -->
+    <div class="section similar-section" id="similar-container" hidden>
+        <h2 class="section-title">Recomendações</h2>
+        <div class="carousel-wrapper">
+            <button id="nav-similar-left" class="carousel-nav left" aria-label="Anterior">❮</button>
+            <div id="carousel-similar" class="carousel"></div>
+            <button id="nav-similar-right" class="carousel-nav right" aria-label="Próximo">❯</button>
+        </div>
+    </div>
+
+    <!-- Seção de Temporadas (apenas para séries) -->
+    <div class="section seasons-section" id="seasons-container" hidden>
+        <h2 class="section-title">Temporada Atual</h2>
+        <div id="current-season-card" class="season-card"></div>
+    </div>
+
+    <!-- Seção de Coleção (se aplicável) -->
+    <div class="section collection-section" id="collection-container" hidden>
+        <h2 class="section-title">Coleção</h2>
+        <div id="collection-content"></div>
+    </div>
+
     <!-- Seção de Avaliação do Usuário -->
     <div class="section user-review-section">
         <h2 class="section-title">Deixe sua Avaliação</h2>
@@ -443,7 +471,7 @@
             <p>O CineHome é uma plataforma líder em avaliação e crítica de filmes e séries, fundada em 2024 com a missão de ajudar espectadores a descobrir e avaliar o melhor conteúdo audiovisual.</p>
             
             <h2>Nossa Missão</h2>
-            <p>Fornecer avaliações confiáveis e recomendações personalizadas através de inteligência artificial avançada, análises detalhadas e uma comunidade engajada de cinéfilos.</p>
+            <p>Fornecer avaliações confiáveis e recomendações personalizadas através de inteligência artificial avançada, análises detalhadas e uma comunidade engajada CINEHOME.</p>
             
             <h2>Nossos Valores</h2>
             <ul>
@@ -984,6 +1012,7 @@
 <script src="confirm-modal.js"></script>
 <script src="favoritos.js"></script>
 <script src="user-reviews.js" defer></script>
+<script src="movie-cast-and-recommendations.js" defer></script>
 <script src="movie-details.js"></script>
 <script src="footer.js"></script>
 

@@ -853,6 +853,26 @@
     });
 
     /**
+     * Preload de imagens críticas
+     */
+    function preloadImages(movie) {
+        if (movie.backdrop) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = optimizeImageUrl(movie.backdrop, 'backdrop');
+            document.head.appendChild(link);
+        }
+        if (movie.poster) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = optimizeImageUrl(movie.poster, 'poster');
+            document.head.appendChild(link);
+        }
+    }
+
+    /**
      * Charge les détails du film
      */
     async function loadMovieDetails() {
@@ -1165,7 +1185,58 @@
             budget: mediaType === 'movie' ? formatCurrency(data.budget) : 'N/A',
             revenue: mediaType === 'movie' ? formatCurrency(data.revenue) : 'N/A',
             trailerVideoId: trailerVideo?.key || '',
-            mediaType: mediaType // Stocker le type pour référence future
+            mediaType: mediaType, // Stocker le type pour référence future
+            
+            // Elenco formatado
+            cast: (data.credits?.cast || []).slice(0, 12).map(actor => ({
+                id: actor.id,
+                name: actor.name,
+                character: actor.character || 'Papel desconhecido',
+                profilePath: actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : ''
+            })),
+            
+            // Filmes/séries similares formatados
+            similar: (data.similar?.results || []).slice(0, 10).map(item => ({
+                id: item.id,
+                title: item.title || item.name || 'Título desconhecido',
+                poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                rating: item.vote_average ? item.vote_average.toFixed(1) : 'N/A',
+                year: item.release_date ? item.release_date.split('-')[0] : (item.first_air_date ? item.first_air_date.split('-')[0] : 'N/A'),
+                mediaType: item.media_type || mediaType
+            })),
+            
+            // Coleção (se aplicável)
+            collection: data.belongs_to_collection ? {
+                id: data.belongs_to_collection.id,
+                name: data.belongs_to_collection.name,
+                poster: data.belongs_to_collection.poster_path ? `https://image.tmdb.org/t/p/w500${data.belongs_to_collection.poster_path}` : '',
+                backdrop: data.belongs_to_collection.backdrop_path ? `https://image.tmdb.org/t/p/original${data.belongs_to_collection.backdrop_path}` : ''
+            } : null,
+            
+            // Temporadas (apenas para séries)
+            seasons: mediaType === 'tv' ? (data.seasons || []) : [],
+            
+            // Redes (apenas para séries)
+            networks: mediaType === 'tv' ? (data.networks || []) : [],
+            
+            // Informações de redes sociais
+            social: {
+                imdb_id: data.imdb_id || null,
+                facebook_id: data.external_ids?.facebook_id || null,
+                instagram_id: data.external_ids?.instagram_id || null,
+                twitter_id: data.external_ids?.twitter_id || null
+            },
+            
+            // Keywords/palavras-chave
+            keywords: (data.keywords?.keywords || data.keywords || [])
+                .slice(0, 10)
+                .map(k => ({ name: k.name || k })),
+            
+            // Provedores de streaming
+            providers: data.watch_providers?.BR?.flatrate || data.watch_providers?.US?.flatrate || [],
+            
+            // Idioma original
+            originalLanguage: data.original_language || 'en'
         };
     }
     
@@ -1177,17 +1248,110 @@
     }
 
     /**
+     * Otimiza URL de imagem TMDB com formato WebP e tamanho apropriado
+     */
+    function optimizeImageUrl(url, type = 'backdrop') {
+        if (!url) return '';
+        
+        // Se a imagem já está em cache, usar a versão em cache
+        const cacheKey = `img_cache_${btoa(url)}`;
+        const cachedUrl = sessionStorage.getItem(cacheKey);
+        if (cachedUrl) return cachedUrl;
+        
+        // Determinar tamanho baseado no tipo de imagem
+        let size = 'w500'; // padrão para poster
+        if (type === 'backdrop') {
+            size = 'w1280'; // tamanho otimizado para backdrop
+        } else if (type === 'poster') {
+            size = 'w342'; // tamanho otimizado para poster em devices pequenos
+        }
+        
+        const optimizedUrl = url.replace(/\/t\/p\/\w+\//, `/t/p/${size}/`);
+        
+        // Cache a URL otimizada
+        try {
+            sessionStorage.setItem(cacheKey, optimizedUrl);
+        } catch (e) {
+            console.warn('Erro ao cachear imagem:', e);
+        }
+        
+        return optimizedUrl;
+    }
+
+    /**
+     * Carrega imagem com lazy loading e tratamento de erro
+     */
+    function loadImageOptimized(element, imageUrl, type = 'backdrop') {
+        if (!element || !imageUrl) return;
+        
+        const optimizedUrl = optimizeImageUrl(imageUrl, type);
+        
+        // Adicionar placeholder blur enquanto carrega
+        element.style.filter = 'blur(10px)';
+        element.style.transition = 'filter 0.3s ease-in-out';
+        
+        // Usar Intersection Observer para lazy loading
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const actualUrl = img.dataset.src || optimizedUrl;
+                        
+                        img.onload = () => {
+                            img.style.filter = 'blur(0)';
+                            img.classList.add('loaded');
+                        };
+                        img.onerror = () => {
+                            console.warn('Erro ao carregar imagem:', actualUrl);
+                            img.style.filter = 'blur(0)';
+                            // Fallback para URL original se otimizada falhar
+                            if (actualUrl !== imageUrl) {
+                                img.src = imageUrl;
+                            }
+                        };
+                        
+                        img.src = actualUrl;
+                        observer.unobserve(img);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            observer.observe(element);
+        } else {
+            // Fallback para navegadores sem Intersection Observer
+            element.onload = () => {
+                element.style.filter = 'blur(0)';
+                element.classList.add('loaded');
+            };
+            element.onerror = () => {
+                console.warn('Erro ao carregar imagem:', optimizedUrl);
+                element.style.filter = 'blur(0)';
+                if (optimizedUrl !== imageUrl) {
+                    element.src = imageUrl;
+                }
+            };
+            element.src = optimizedUrl;
+        }
+    }
+
+    /**
      * Met à jour les informations du film
      */
     function updateMovieInfo(movie) {
         console.log('🎨 updateMovieInfo chamada com:', movie);
+        
+        // Preload das imagens críticas
+        preloadImages(movie);
         
         // Helper function para atualizar elementos com segurança
         const setElementContent = (id, content, isImage = false) => {
             const element = document.getElementById(id);
             if (element) {
                 if (isImage) {
-                    element.src = content;
+                    // Usar carregamento otimizado para imagens
+                    const type = id === 'movie-backdrop' ? 'backdrop' : 'poster';
+                    loadImageOptimized(element, content, type);
                 } else {
                     element.textContent = content;
                 }
@@ -1241,7 +1405,29 @@
             }
         }
         
+        // Renderizar elenco se disponível
+        if (movie.cast && movie.cast.length > 0) {
+            renderCast(movie.cast, 'cast-grid');
+        }
+        
+        // Renderizar filmes similares/recomendações
+        if (movie.similar && movie.similar.length > 0) {
+            renderSimilar(movie.similar, 'carousel-similar', 'similar-container');
+        }
+        
+        // Renderizar coleção se existir
+        if (movie.collection) {
+            renderCollection(movie.collection, 'collection-container');
+        }
+        
+        // Renderizar temporadas (apenas para séries)
+        if (movie.mediaType === 'tv' && movie.seasons && movie.seasons.length > 0) {
+            renderSeasons(movie);
+        }
+        
         console.log('✅ Informações do filme atualizadas com sucesso!');
+        console.log('✅ Elenco renderizado:', movie.cast ? movie.cast.length : 0, 'atores');
+        console.log('✅ Recomendações renderizadas:', movie.similar ? movie.similar.length : 0, 'filmes');
     }
 
     /**
@@ -1329,20 +1515,24 @@
     }
 
     /**
-     * Affiche les plateformes de streaming
+     * Affiche as plataformas de streaming com carregamento otimizado
      */
     function displayStreamingProviders(providers) {
         const container = document.getElementById('streaming-logos');
         container.innerHTML = '';
         
-        // Limiter à 4 providers maximum
+        // Limitar a 4 providers máximo
         providers.slice(0, 4).forEach(provider => {
             const item = document.createElement('div');
             item.className = 'streaming-item';
             
             const img = document.createElement('img');
-            img.src = `https://image.tmdb.org/t/p/original${provider.logo_path}`;
+            const imageUrl = `https://image.tmdb.org/t/p/original${provider.logo_path}`;
             img.alt = provider.provider_name;
+            img.loading = 'lazy';
+            
+            // Carregar com otimização
+            loadImageOptimized(img, imageUrl, 'poster');
             
             const span = document.createElement('span');
             span.textContent = provider.provider_name;
@@ -1360,21 +1550,35 @@
      */
     function setDefaultStreamingProviders() {
         const container = document.getElementById('streaming-logos');
-        container.innerHTML = `
-            <div class="streaming-item">
-                <img src="https://image.tmdb.org/t/p/original/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg" alt="Netflix">
-                <span>Netflix</span>
-            </div>
-            <div class="streaming-item">
-                <img src="https://image.tmdb.org/t/p/original/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg" alt="HBO Max">
-                <span>HBO Max</span>
-            </div>
-            <div class="streaming-item">
-                <img src="https://image.tmdb.org/t/p/original/7rwgEs15tFwyR9NPQ5vpzxTj19Q.jpg" alt="Disney+">
-                <span>Disney+</span>
-            </div>
-        `;
-        document.getElementById('streaming-note').textContent = 'Plataformas sugeridas - Verifique disponibilidade';
+        container.innerHTML = '';
+        
+        // Providers padrão
+        const defaultProviders = [
+            { name: 'Netflix', logo: 'https://image.tmdb.org/t/p/original/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg' },
+            { name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/original/68mAcAgKZVib2b82hnah05hL9oL.jpg' },
+            { name: 'Disney+', logo: 'https://image.tmdb.org/t/p/original/Ht1YbCcSVaeG2r5eSuBBQBsO97M.jpg' }
+        ];
+        
+        defaultProviders.forEach(provider => {
+            const item = document.createElement('div');
+            item.className = 'streaming-item';
+            
+            const img = document.createElement('img');
+            img.alt = provider.name;
+            img.loading = 'lazy';
+            
+            // Carregar com otimização
+            loadImageOptimized(img, provider.logo, 'poster');
+            
+            const span = document.createElement('span');
+            span.textContent = provider.name;
+            
+            item.appendChild(img);
+            item.appendChild(span);
+            container.appendChild(item);
+        });
+        
+        document.getElementById('streaming-note').textContent = 'Disponibilidade pode variar por região';
     }
 
     /**
@@ -1391,9 +1595,115 @@
                 return;
             }
 
-            // Ouvrir YouTube dans un nouvel onglet
-            window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            // Abrir vídeo em modal incorporado
+            openEmbeddedVideoModal(videoId);
         });
+    }
+
+    /**
+     * Abre o video do YouTube em um modal incorporado
+     */
+    function openEmbeddedVideoModal(videoId) {
+        // Criar modal se não existir
+        let videoModal = document.getElementById('embedded-video-modal');
+        
+        if (!videoModal) {
+            videoModal = document.createElement('div');
+            videoModal.id = 'embedded-video-modal';
+            videoModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                font-size: 40px;
+                font-weight: bold;
+                color: white;
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            closeBtn.onclick = () => closeEmbeddedVideoModal();
+            
+            const container = document.createElement('div');
+            container.style.cssText = `
+                width: 90%;
+                max-width: 1000px;
+                aspect-ratio: 16 / 9;
+                position: relative;
+            `;
+            
+            const iframe = document.createElement('iframe');
+            iframe.id = 'embedded-video-iframe';
+            iframe.style.cssText = `
+                width: 100%;
+                height: 100%;
+                border: none;
+                border-radius: 8px;
+            `;
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            
+            container.appendChild(iframe);
+            videoModal.appendChild(container);
+            videoModal.appendChild(closeBtn);
+            document.body.appendChild(videoModal);
+            
+            // Fechar ao clicar fora do vídeo
+            videoModal.addEventListener('click', (e) => {
+                if (e.target === videoModal) {
+                    closeEmbeddedVideoModal();
+                }
+            });
+            
+            // Fechar com tecla ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeEmbeddedVideoModal();
+                }
+            });
+        }
+        
+        // Carregar vídeo no iframe
+        const iframe = document.getElementById('embedded-video-iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&hl=pt-BR&cc_lang_pref=pt&cc_load_policy=1`;
+        
+        videoModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Fecha o modal de vídeo incorporado
+     */
+    function closeEmbeddedVideoModal() {
+        const videoModal = document.getElementById('embedded-video-modal');
+        if (videoModal) {
+            videoModal.style.display = 'none';
+            const iframe = document.getElementById('embedded-video-iframe');
+            if (iframe) {
+                iframe.src = '';
+            }
+            document.body.style.overflow = '';
+        }
     }
 
     /**

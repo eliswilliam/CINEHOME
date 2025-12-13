@@ -409,6 +409,14 @@ class MovieCarousel {
     * @returns {void}
    */
   selectMovie(card) {
+    // Verificar se o usuário está logado
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // Se não está logado, redirecionar para login
+      window.location.href = 'login.html';
+      return;
+    }
+    
     const title = card.querySelector('.movie-title')?.textContent || 'Filme selecionado';
     const tmdbId = card.getAttribute('data-tmdb-id');
     const mediaType = card.getAttribute('data-media-type') || 'movie';
