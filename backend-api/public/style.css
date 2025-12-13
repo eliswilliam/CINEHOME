@@ -269,10 +269,10 @@ body {
   }
 }
 
-/* Media query pour Android/mobile */
-@media (max-width: 480px) {
+/* Media query pour tablettes petites et grands mobiles (360-600px) - Android/iPhone */
+@media (max-width: 600px) {
   .site-header {
-    padding: 10px 0;
+    padding: 10px 8px;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: space-between;
@@ -281,13 +281,93 @@ body {
   /* Ligne 1: Logo à gauche, Actions à droite */
   .brand-logo {
     order: 1;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     flex: 0 0 auto;
   }
   
   .header-actions {
     order: 2;
-    gap: 4px !important;
+    gap: 3px !important;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+  
+  /* Ligne 2: Barre de recherche sur toute la largeur */
+  .search-container {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    flex: 0 0 100%;
+  }
+  
+  .btn-settings {
+    font-size: 0.6rem !important;
+    padding: 4px 6px !important;
+    white-space: nowrap !important;
+  }
+  
+  .favoritos-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+  
+  .favoritos-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .social-btn {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 4px !important;
+  }
+  
+  .social-btn .social-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .profile-avatar-btn {
+    padding: 2px !important;
+  }
+  
+  .profile-avatar-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .profile-dropdown-arrow {
+    display: none !important;
+  }
+  
+  .favoritos-count {
+    font-size: 9px !important;
+    min-width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+/* Media query pour petits mobiles (360px-480px) - Android/iPhone SE */
+@media (max-width: 480px) {
+  .site-header {
+    padding: 8px 6px;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+  }
+  
+  /* Ligne 1: Logo à gauche, Actions à droite */
+  .brand-logo {
+    order: 1;
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+  
+  .header-actions {
+    order: 2;
+    gap: 2px !important;
     flex: 0 0 auto;
     margin-left: auto;
   }
@@ -302,21 +382,54 @@ body {
   }
   
   .search-input {
-    font-size: 14px;
-    padding: 10px 45px 10px 16px;
+    font-size: 13px;
+    padding: 8px 40px 8px 12px;
   }
   
   .btn-settings {
-    font-size: 0.75rem !important;
-    padding: 6px 8px !important;
+    font-size: 0.55rem !important;
+    padding: 3px 5px !important;
     white-space: nowrap !important;
   }
   
-  .btn-login {
-    padding: 7px 10px;
-    font-size: 0.85rem;
+  .favoritos-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
   }
   
+  .favoritos-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .social-btn {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 3px !important;
+  }
+  
+  .social-btn .social-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .profile-avatar-img {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  
+  .favoritos-count {
+    font-size: 8px !important;
+    min-width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .btn-login {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+
   /* Social button responsive pour mobile */
   .social-menu-container {
     margin-right: 0;
