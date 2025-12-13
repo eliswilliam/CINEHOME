@@ -1,9 +1,16 @@
-
+/* Empêcher le zoom automatique sur iOS/mobile lors du focus sur les inputs */
+@media screen and (max-width: 768px) {
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+}
 
 body {
   font-family: "Poppins", sans-serif;
   background: #222222;
   color: #ffffff;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .header {
@@ -229,7 +236,7 @@ body {
   }
   
   .search-input {
-    font-size: 14px;
+    font-size: 16px;
     padding: 10px 45px 10px 16px;
   }
   
@@ -277,7 +284,7 @@ body {
   }
   
   .search-input {
-    font-size: 14px;
+    font-size: 16px;
     padding: 10px 45px 10px 16px;
   }
   
