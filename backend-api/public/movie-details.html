@@ -20,23 +20,12 @@
 <!-- Container principal -->
 <div class="container">
     <!-- Cabeçalho (mesmo de home.html) -->
-    <div class="site-header" role="banner" aria-label="Cabeçalho">
+    <div class="site-header" role="banner" aria-label="Cabeçalho" style="flex-wrap: nowrap; justify-content: space-between;">
         <a href="home.html" class="brand-logo" aria-label="CineHome - Página inicial">
           <span class="brand-part brand-part-cine">CINE</span><span class="brand-part brand-part-home">HOME</span>
         </a>
         
-        <!-- Barra de pesquisa -->
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="Pesquisar filmes..." aria-label="Pesquisar filmes">
-            <button class="search-button" aria-label="Buscar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="header-actions">
+        <div class="header-actions" style="margin-left: auto;">
           <!-- Favoritos Menu -->
           <div class="favoritos-menu-container">
             <button class="favoritos-btn" id="favoritos-btn" aria-label="Meus Favoritos">
@@ -51,10 +40,29 @@
                     fill: white;
                     stroke: white;
                 }
+                .social-icon path {
+                    fill: none;
+                    stroke: white;
+                    stroke-width: 1.8;
+                    transition: all 0.25s ease;
+                }
+                .social-icon:hover path {
+                    stroke: #5f5dff;
+                }
                 </style>
                 <svg class="heart-icon" viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg"> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 c1.74 0 3.41 0.81 4.5 2.09 C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg>
               <span class="favoritos-count" id="favoritos-count">0</span>
             </button>
+          </div>
+
+          <!-- Social Feed Button -->
+          <div class="social-menu-container">
+            <a href="social-feed.html" class="social-btn" id="social-btn" aria-label="Comunidade CINEHOME" title="Comunidade CINEHOME">
+              <svg class="social-icon" viewBox="0 0 24 24" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span class="social-badge" id="social-badge" style="display: none;">3</span>
+            </a>
           </div>
           
           <!-- Profile Menu -->
