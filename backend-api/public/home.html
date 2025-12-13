@@ -20,6 +20,90 @@
     <link rel="stylesheet" href="favoritos.css">
     <link rel="stylesheet" href="movie-details-modal.css">
 
+    <!-- Styles spécifiques pour home.html - Header responsive 2 lignes -->
+    <style>
+        /* Réduire l'espace entre les icônes d'action */
+        .header-actions {
+            gap: 6px !important;
+        }
+        
+        /* Responsive 300px - 600px : Logo + Actions sur ligne 1, Search sur ligne 2 */
+        @media (max-width: 600px) {
+            .site-header {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 0;
+            }
+            
+            .brand-logo {
+                order: 1;
+                flex-shrink: 0;
+            }
+            
+            .header-actions {
+                order: 2;
+                gap: 4px !important;
+                flex-shrink: 0;
+                margin-left: auto;
+            }
+            
+            .search-container {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                flex-basis: 100%;
+            }
+            
+            /* Réduire la taille du bouton TMDB */
+            .btn-settings {
+                font-size: 0.7rem !important;
+                padding: 8px 8px !important;
+            }
+            
+            /* Réduire les boutons icônes */
+            .favoritos-btn,
+            .social-btn,
+            .profile-avatar-btn {
+                padding: 4px !important;
+            }
+            
+            .profile-avatar-img {
+                width: 28px !important;
+                height: 28px !important;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .header-actions {
+                gap: 2px !important;
+            }
+            
+            .btn-settings {
+                font-size: 0.65rem !important;
+                padding: 8px 6px !important;
+            }
+            
+            .brand-logo {
+                font-size: 1.1rem !important;
+            }
+            
+            .profile-avatar-img {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            
+            .heart-icon,
+            .social-icon {
+                width: 22px !important;
+                height: 22px !important;
+            }
+        }
+    </style>
+
 </head>
 <body>
 
