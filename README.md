@@ -1,6 +1,6 @@
 # 🎬 CINEHOME - Plataforma de Avaliação de Filmes e Séries
 
-link de hospedagem : https://cinehome.onrender.com
+link de hospedagem : https://cinehome1.vercel.app
 
 <img width="600" height="600" alt="CINEHOME - Apresentação" src="https://github.com/user-attachments/assets/77c92402-03ef-4cbe-a4d2-53a50cc2ede2" />
 
@@ -218,15 +218,15 @@ EMAIL_USER=seu_email@gmail.com
 EMAIL_PASSWORD=sua_senha_aplicacao_gmail
 
 # Frontend URLs
-FRONTEND_URL=https://cinehome.onrender.com/reset.html
-FRONTEND_LOGIN_URL=https://cinehome.onrender.com/profil.html
+FRONTEND_URL=https://cinehome1.vercel.app/reset.html
+FRONTEND_LOGIN_URL=https://cinehome1.vercel.app/profil.html
 
 # Google OAuth
 GOOGLE_CLIENT_ID=seu_client_id_google.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=seu_client_secret_google
-GOOGLE_CALLBACK_URL=https://cinehome.onrender.com/auth/google/callback
-GOOGLE_LOGIN_CALLBACK_URL=https://cinehome.onrender.com/auth/google/login/callback
-GOOGLE_SIGNUP_CALLBACK_URL=https://cinehome.onrender.com/auth/google/signup/callback
+GOOGLE_CALLBACK_URL=https://cinehome1.vercel.app/auth/google/callback
+GOOGLE_LOGIN_CALLBACK_URL=https://cinehome1.vercel.app/auth/google/login/callback
+GOOGLE_SIGNUP_CALLBACK_URL=https://cinehome1.vercel.app/auth/google/signup/callback
 
 # APIs
 TMDB_API_KEY=sua_chave_tmdb
@@ -251,7 +251,7 @@ O frontend está integrado no backend e é servido estaticamente pela pasta `pub
 1. **Atualize o arquivo config.js** (se necessário para desenvolvimento local)
 ```javascript
 const CONFIG = {
-  API_BASE_URL: 'http://localhost:10000', // ou https://cinehome.onrender.com
+  API_BASE_URL: 'http://localhost:10000', // ou https://cinehome1.vercel.app
   // ...
 };
 ```
@@ -278,9 +278,9 @@ O projeto está configurado para deploy automático no Render:
 ### Configuração Google OAuth
 
 No Google Cloud Console, adicione as URIs de redireção autorizadas:
-- `https://cinehome.onrender.com/auth/google/callback`
-- `https://cinehome.onrender.com/auth/google/login/callback`
-- `https://cinehome.onrender.com/auth/google/signup/callback`
+- `https://cinehome1.vercel.app/auth/google/callback`
+- `https://cinehome1.vercel.app/auth/google/login/callback`
+- `https://cinehome1.vercel.app/auth/google/signup/callback`
 
 ## 📡 API Endpoints
 

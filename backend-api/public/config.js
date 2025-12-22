@@ -1,5 +1,5 @@
 const CONFIG = {
-  API_BASE_URL: 'https://cinehome.onrender.com',
+  API_BASE_URL: 'https://cinehome1.vercel.app',
   
   ENDPOINTS: {
     LOGIN: '/api/users/login',

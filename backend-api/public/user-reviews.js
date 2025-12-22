@@ -20,8 +20,8 @@ const UserReviews = {
         
         console.log('🌐 Détection de l\'environnement:', { hostname, protocol, port });
         
-        // Si on est sur Render (cinehome.onrender.com) ou localhost avec le backend sur le même port
-        if (hostname === 'cinehome.onrender.com' || 
+        // Si on est sur Vercel (cinehome1.vercel.app) ou localhost avec le backend sur le même port
+        if (hostname === 'cinehome1.vercel.app' || 
             (hostname === 'localhost' && port === '3001') ||
             (hostname === '127.0.0.1' && port === '3001')) {
             const baseUrl = `${protocol}//${hostname}${port ? ':' + port : ''}/api/reviews`;
