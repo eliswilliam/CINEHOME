@@ -357,13 +357,20 @@ console.log('🎬 Social Feed API: Chargement du module...');
      * Rendre le feed
      */
     function renderFeed() {
+        console.log('🎨 renderFeed appelée avec', socialPosts.length, 'posts');
         const feedContainer = document.getElementById('social-feed-container');
-        if (!feedContainer) return;
+        console.log('📦 Container trouvé:', feedContainer ? 'OUI' : 'NON');
+        
+        if (!feedContainer) {
+            console.error('❌ Container #social-feed-container introuvable!');
+            return;
+        }
 
         // Garder le loader
         const loader = document.getElementById('social-loader');
         
         feedContainer.innerHTML = socialPosts.map(post => createPostElement(post)).join('');
+        console.log('✅ HTML injecté dans le container');
         
         // Réattacher le loader
         if (loader) {
