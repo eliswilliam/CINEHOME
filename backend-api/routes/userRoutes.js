@@ -8,6 +8,7 @@ router.post('/login', userController.login);
 
 // Routes de récupération de mot de passe
 router.post('/forgot-password', userController.forgotPassword);
+router.post('/request-password-reset', userController.forgotPassword); // Alias pour compatibilité
 router.post('/verify-reset-code', userController.verifyResetCode);
 router.post('/reset-password', userController.resetPassword);
 

@@ -1,10 +1,13 @@
 const CONFIG = {
-  API_BASE_URL: 'https://cinehome1.vercel.app',
+  // Détection automatique de l'environnement
+  API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:10000'  // Développement local
+    : 'https://cinehome1.vercel.app',  // Production
   
   ENDPOINTS: {
     LOGIN: '/api/users/login',
     REGISTER: '/api/users/register',
-    FORGOT_PASSWORD: '/api/users/forgot-password',
+    FORGOT_PASSWORD: '/api/users/request-password-reset',  // Utiliser le bon endpoint
     VERIFY_RESET_CODE: '/api/users/verify-reset-code',
     RESET_PASSWORD: '/api/users/reset-password',
     HEALTH: '/health'

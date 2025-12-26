@@ -49,15 +49,27 @@ exports.login = async (req, res) => {
 
 // Enviar código de recuperação por email
 exports.forgotPassword = async (req, res) => {
+  console.log('🔵 forgotPassword chamado');
+  console.log('📦 req.body:', req.body);
+  
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email obrigatório' });
+    if (!email) {
+      console.log('❌ Email não fornecido');
+      return res.status(400).json({ message: 'Email obrigatório' });
+    }
 
+    console.log('🔍 Procurando usuário:', email);
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+    if (!user) {
+      console.log('❌ Usuário não encontrado:', email);
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
 
+    console.log('✅ Usuário encontrado');
     // Gerar código de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('🔑 Código gerado:', code);
     
     // Armazenar código com expiração de 10 minutos
     verificationCodes.set(email, {
@@ -65,9 +77,13 @@ exports.forgotPassword = async (req, res) => {
       expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutos
     });
 
+    console.log('💾 Código armazenado');
+    
     // Enviar código por email
     try {
+      console.log('📧 Tentando enviar email...');
       const emailResult = await emailService.sendVerificationCode(email, code);
+      console.log('📧 Resultado do envio:', emailResult);
       
       console.log(`📧 Código de recuperação para ${email}: ${code}`);
       
@@ -83,18 +99,22 @@ exports.forgotPassword = async (req, res) => {
         response.devMode = true;
       }
       
+      console.log('✅ Retornando resposta de sucesso');
       res.json(response);
     } catch (emailError) {
       console.error('❌ Erro ao enviar email:', emailError);
       // Código gerado mas email não enviado - ainda retornar sucesso para não revelar se o email existe
       res.json({ 
         message: 'Se o email existir, você receberá um código em breve',
-        expiresIn: '10 minutos'
+        expiresIn: '10 minutos',
+        code: code, // Em dev, retornar código
+        devMode: true
       });
     }
   } catch (error) {
-    console.error('forgotPassword error:', error);
-    res.status(500).json({ message: 'Erro no servidor' });
+    console.error('❌ forgotPassword error:', error);
+    console.error('❌ Stack:', error.stack);
+    res.status(500).json({ message: 'Erro no servidor', error: error.message });
   }
 };
 
@@ -157,10 +177,13 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-    const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
+    console.log('🔐 Redefinindo senha para:', email);
+    
+    // Ne PAS hasher manuellement ! Le hook pre('save') du modèle le fera automatiquement
+    user.password = newPassword;
     await user.save();
 
+    console.log('✅ Senha redefinida com sucesso para:', email);
     return res.json({ message: 'Senha redefinida com sucesso' });
   } catch (error) {
     console.error('resetPassword error:', error);

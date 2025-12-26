@@ -60,13 +60,27 @@ console.log('📁 Servindo arquivos estáticos de:', publicPath);
 app.use(express.static(publicPath));
 
 // Rota catch-all: servir index.html para todas as rotas não-API (SPA)
+// Apenas para requisições GET que não são de API
 app.use((req, res, next) => {
-  // Não interceptar rotas de API
-  if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/health')) {
-    return res.status(404).json({ message: 'Endpoint não encontrado' });
+  // Se for uma rota de API, deixar passar para retornar 404 do Express
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth')) {
+    return next();
   }
-  // Servir index.html para todas as outras rotas (SPA)
-  res.sendFile(path.join(publicPath, 'index.html'));
+  // Se for GET e não for API, servir index.html (SPA)
+  if (req.method === 'GET') {
+    return res.sendFile(path.join(publicPath, 'index.html'));
+  }
+  next();
+});
+
+// Middleware global de tratamento de erros - DEVE estar após todas as rotas
+app.use((err, req, res, next) => {
+  console.error('❌ Erro capturado pelo middleware:', err);
+  console.error('Stack:', err.stack);
+  res.status(err.status || 500).json({ 
+    message: err.message || 'Erro interno do servidor',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 });
 
 // Porta do .env ou valor padrão (10000 para Render)
@@ -102,17 +116,23 @@ server.headersTimeout = 120000;   // 120 segundos
 console.log(`⏱️  Timeouts configurados: keepAlive=${server.keepAliveTimeout}ms, headers=${server.headersTimeout}ms`);
 
 server.on('error', (error) => {
-  console.error('❌ Erro do servidor:', error);
-  process.exit(1);
+  if (error.code === 'EADDRINUSE') {
+    console.error('❌ Erro: Porta já em uso');
+    process.exit(1);
+  } else {
+    console.error('❌ Erro do servidor:', error);
+  }
 });
 
-// Tratamento de erros não capturados
+// Tratamento de erros não capturados - apenas log, não crash
 process.on('uncaughtException', (error) => {
   console.error('❌ Erro não capturado:', error);
-  process.exit(1);
+  console.error('Stack:', error.stack);
+  // Não fazer process.exit em produção para manter o servidor rodando
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Promessa rejeitada não tratada:', reason);
-  process.exit(1);
+  console.error('Promise:', promise);
+  // Não fazer process.exit em produção para manter o servidor rodando
 });

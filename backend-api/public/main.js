@@ -30,7 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loginBtn: !!loginBtn,
     signupBtn: !!signupBtn,
     signupLink: !!signupLink,
-    forgotPasswordLink: !!forgotPasswordLink
+    forgotPasswordLink: !!forgotPasswordLink,
+    forgotPasswordForm: !!forgotPasswordForm,
+    verifyCodeForm: !!verifyCodeForm
+  });
+
+  console.log('⚙️ CONFIG:', {
+    API_BASE_URL: CONFIG.API_BASE_URL,
+    FORGOT_PASSWORD: CONFIG.ENDPOINTS.FORGOT_PASSWORD,
+    fullUrl: getApiUrl ? getApiUrl('FORGOT_PASSWORD') : 'getApiUrl não definido'
   });
 
   if (signupBtn && loginFormUI && loginText) {
@@ -376,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (forgotPasswordForm) {
+    console.log('✅ Formulário de recuperação encontrado');
     forgotPasswordForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       console.log('📧 Solicitação de código iniciada');
@@ -384,19 +393,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const submitBtn = forgotPasswordForm.querySelector('.submit-btn');
       const email = emailInput.value.trim();
 
+      console.log('📧 Email digitado:', email);
+      console.log('🌐 API URL:', getApiUrl('FORGOT_PASSWORD'));
+
       if (!email || !email.includes('@')) {
+        console.error('❌ Email inválido');
         notify.error('Email inválido', 'Por favor, digite um endereço de email válido');
         return;
       }
 
       try {
         showSpinner(submitBtn, true);
+        console.log('⏳ Enviando requisição...');
 
         // Timeout para mobile (12 segundos)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), CONFIG.SETTINGS.REQUEST_TIMEOUT);
 
-        const response = await fetch(getApiUrl('FORGOT_PASSWORD'), {
+        const apiUrl = getApiUrl('FORGOT_PASSWORD');
+        console.log('🚀 Enviando para:', apiUrl);
+
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -407,12 +424,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         clearTimeout(timeoutId);
+        console.log('📥 Resposta recebida - Status:', response.status);
 
         if (!response.ok) {
+          console.error('❌ Resposta não OK:', response.status);
           let errorMessage = '';
           switch (response.status) {
             case 400:
               errorMessage = '❌ Email inválido. Verifique e tente novamente.';
+              break;
+            case 404:
+              errorMessage = '❌ Usuário não encontrado. Verifique o email.';
               break;
             case 429:
               errorMessage = '❌ Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.';
@@ -423,7 +445,9 @@ document.addEventListener('DOMContentLoaded', function() {
             default:
               errorMessage = `❌ Erro de conexão (${response.status}). Verifique sua internet.`;
           }
-          throw new Error(errorMessage);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('❌ Dados do erro:', errorData);
+          throw new Error(errorData.message || errorMessage);
         }
 
         const data = await response.json();

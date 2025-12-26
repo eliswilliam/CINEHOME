@@ -13,26 +13,30 @@ const UserReviews = {
     
     // Détection automatique de l'URL de l'API backend
     get apiBaseUrl() {
-        // En production sur Render ou en développement local avec même domaine
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
         const port = window.location.port;
         
         console.log('🌐 Détection de l\'environnement:', { hostname, protocol, port });
         
-        // Si on est sur Vercel (cinehome1.vercel.app) ou localhost avec le backend sur le même port
-        if (hostname === 'cinehome1.vercel.app' || 
-            (hostname === 'localhost' && port === '3001') ||
-            (hostname === '127.0.0.1' && port === '3001')) {
-            const baseUrl = `${protocol}//${hostname}${port ? ':' + port : ''}/api/reviews`;
-            console.log('✅ Mode Production/Backend: API =', baseUrl);
+        // Production Vercel
+        if (hostname === 'cinehome1.vercel.app') {
+            const baseUrl = 'https://cinehome1.vercel.app/api/reviews';
+            console.log('✅ Mode Production Vercel: API =', baseUrl);
             return baseUrl;
         }
         
-        // Développement local (serveur front sur port 5500, backend sur 3001)
-        const backendUrl = 'http://localhost:3001/api/reviews';
-        console.log('✅ Mode Développement: API =', backendUrl);
-        return backendUrl;
+        // Développement local
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            const backendUrl = 'http://localhost:10000/api/reviews';
+            console.log('✅ Mode Développement: API =', backendUrl);
+            return backendUrl;
+        }
+        
+        // Fallback: utiliser le même domaine
+        const baseUrl = `${protocol}//${hostname}${port ? ':' + port : ''}/api/reviews`;
+        console.log('✅ Mode Auto: API =', baseUrl);
+        return baseUrl;
     },
 
     // Inicializar o sistema
