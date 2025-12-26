@@ -3,6 +3,8 @@
  * Utilise l'API backend pour gérer les posts, likes et commentaires
  */
 
+console.log('🎬 Social Feed API: Chargement du module...');
+
 (function() {
     'use strict';
 
@@ -10,6 +12,8 @@
     const API_BASE_URL = window.location.hostname === 'localhost' 
         ? 'http://localhost:10000/api' 
         : '/api';
+    
+    console.log('🔧 Social Feed API: URL configurée:', API_BASE_URL);
 
     // État du feed social
     let socialPosts = [];
@@ -26,12 +30,15 @@
      * Initialise le module de feed social
      */
     function initSocialFeed() {
+        console.log('🚀 Social Feed: Initialisation...');
         currentUserProfile = getCurrentUserProfile();
+        console.log('👤 Profil utilisateur:', currentUserProfile);
         setupEventListeners();
         loadPosts();
         populateMovieDropdown();
         setupHeaderButton();
         setupInfiniteScroll();
+        console.log('✅ Social Feed: Initialisé!');
     }
 
     /**
@@ -272,19 +279,30 @@
      * Charge les posts depuis l'API
      */
     async function loadPosts(page = 1) {
-        if (isLoading) return;
+        console.log('📥 Chargement des posts... Page:', page);
+        
+        if (isLoading) {
+            console.log('⏳ Déjà en chargement, ignoré');
+            return;
+        }
         
         isLoading = true;
         showLoader();
 
         try {
-            const response = await fetch(`${API_BASE_URL}/posts?page=${page}&limit=20`);
+            const url = `${API_BASE_URL}/posts?page=${page}&limit=20`;
+            console.log('🌐 Requête API:', url);
+            
+            const response = await fetch(url);
+            console.log('📡 Réponse API:', response.status, response.ok);
             
             if (!response.ok) {
                 throw new Error('Erro ao carregar posts');
             }
 
             const data = await response.json();
+            console.log('📦 Données reçues:', data);
+            console.log('📝 Nombre de posts:', data.posts?.length);
             
             if (page === 1) {
                 socialPosts = data.posts;
@@ -295,9 +313,10 @@
             currentPage = data.pagination.currentPage;
             hasMore = data.pagination.hasMore;
 
+            console.log('✅ Posts chargés! Total:', socialPosts.length);
             renderFeed();
         } catch (error) {
-            console.error('Erro ao carregar posts:', error);
+            console.error('❌ Erro ao carregar posts:', error);
             showNotification('Erro ao carregar posts', 'error');
         } finally {
             isLoading = false;
