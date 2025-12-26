@@ -83,7 +83,9 @@
 
     const institutional = createSection('Institucional', [
       { href: '#ajuda', label: 'Central de Ajuda' },
-      { href: '#termos', label: 'Termos de Uso' },
+      { href: 'termos.html', label: 'Termos de Uso' },
+      { href: 'privacy.html', label: 'Política de Privacidade' },
+      { href: '#termos', label: 'Termos' },
       { href: '#privacidade', label: 'Privacidade' }
     ]);
 
