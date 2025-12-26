@@ -43,8 +43,22 @@
     </div>
 
     <script>
-        // Configuração da API
-        const API_URL = 'https://cinehome1.vercel.app/api/chat';
+        // Configuração da API com detecção automática de ambiente
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:10000/api/chat'
+            : 'https://cinehome1.vercel.app/api/chat';
+        
+        console.log('🤖 Chat API configurada:', API_URL);
+
+        // 🧠 Sistema de Memória do Chat
+        let sessionId = localStorage.getItem('chatSessionId');
+        if (!sessionId) {
+            sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('chatSessionId', sessionId);
+            console.log('🆕 Nova sessão criada:', sessionId);
+        } else {
+            console.log('📌 Sessão recuperada:', sessionId);
+        }
 
         // Elementos DOM
         const chatMessages = document.getElementById('chatMessages');
@@ -69,7 +83,22 @@
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.textContent = message;
+            
+            // Limpar markdown residual e formatar melhor
+            let cleanMessage = message;
+            if (sender === 'bot') {
+                // Remover asteriscos de negrito e itálico
+                cleanMessage = cleanMessage.replace(/\*\*([^*]+)\*\*/g, '$1');
+                cleanMessage = cleanMessage.replace(/\*([^*]+)\*/g, '$1');
+                cleanMessage = cleanMessage.replace(/__([^_]+)__/g, '$1');
+                cleanMessage = cleanMessage.replace(/_([^_]+)_/g, '$1');
+                
+                // Converter quebras de linha em <br>
+                cleanMessage = cleanMessage.replace(/\n/g, '<br>');
+                contentDiv.innerHTML = cleanMessage;
+            } else {
+                contentDiv.textContent = cleanMessage;
+            }
             
             messageDiv.appendChild(contentDiv);
             chatMessages.appendChild(messageDiv);
@@ -118,13 +147,22 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ 
+                        message: message,
+                        sessionId // 🧠 Enviar sessionId para manter contexto
+                    })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Erro ao enviar mensagem');
+                }
+
+                // 🧠 Atualizar sessionId se o servidor retornar um novo
+                if (data.sessionId) {
+                    sessionId = data.sessionId;
+                    localStorage.setItem('chatSessionId', sessionId);
                 }
 
                 // Adicionar resposta do bot

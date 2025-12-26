@@ -115,7 +115,7 @@
         const modal = document.getElementById('social-composer-modal');
         if (modal) {
             modal.style.display = 'none';
-            // Réinitialiser le formulaire
+            document.body.style.overflow = '';
             resetComposer();
         }
     }
@@ -124,8 +124,11 @@
      * Réinitialise le formulaire du compositeur
      */
     function resetComposer() {
-        document.getElementById('composer-textarea').value = '';
-        document.getElementById('composer-movie-select').value = '';
+        const textarea = document.getElementById('composer-textarea');
+        const movieSelect = document.getElementById('composer-movie-select');
+        
+        if (textarea) textarea.value = '';
+        if (movieSelect) movieSelect.value = '';
         currentRating = 0;
         updateRatingDisplay();
     }
@@ -222,17 +225,19 @@
         };
 
         // Ajouter le post au début
-        socialPosts.unshift(post);
-
-        // Sauvegarder en localStorage
-        savePosts();
-
-        // Fermer le modal et actualiser
-        closeComposer();
-        renderFeed();
-
-        // Notification
-        showNotification('Post publicado com sucesso!', 'success');
+        try {
+            socialPosts.unshift(post);
+            savePosts();
+            closeComposer();
+            
+            setTimeout(() => {
+                renderFeed();
+                showNotification('Post publicado com sucesso!', 'success');
+            }, 100);
+        } catch (error) {
+            console.error('Erro ao publicar post:', error);
+            showNotification('Erro ao publicar post. Tente novamente.', 'error');
+        }
     }
 
     /**
@@ -342,7 +347,11 @@
      * Sauvegarde les posts en localStorage
      */
     function savePosts() {
-        localStorage.setItem('cinehome_social_posts', JSON.stringify(socialPosts));
+        try {
+            localStorage.setItem('cinehome_social_posts', JSON.stringify(socialPosts));
+        } catch (error) {
+            console.error('Erro ao salvar posts:', error);
+        }
     }
 
     /**
@@ -350,9 +359,12 @@
      */
     function renderFeed() {
         const feedContainer = document.getElementById('social-posts-feed');
-        if (!feedContainer) return;
+        if (!feedContainer) {
+            console.warn('Feed container não encontrado');
+            return;
+        }
 
-        if (socialPosts.length === 0) {
+        if (!Array.isArray(socialPosts) || socialPosts.length === 0) {
             feedContainer.innerHTML = `
                 <div class="social-empty-state">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -364,7 +376,17 @@
             return;
         }
 
-        feedContainer.innerHTML = socialPosts.map(post => createPostElement(post)).join('');
+        try {
+            feedContainer.innerHTML = socialPosts.map(post => createPostElement(post)).join('');
+        } catch (error) {
+            console.error('Erro ao renderizar feed:', error);
+            feedContainer.innerHTML = `
+                <div class="social-empty-state">
+                    <p>Erro ao carregar posts. Recarregue a página.</p>
+                </div>
+            `;
+            return;
+        }
 
         // Ajouter les écouteurs aux actions du post
         feedContainer.querySelectorAll('.social-post-action').forEach(action => {

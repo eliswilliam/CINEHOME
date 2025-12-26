@@ -27,7 +27,7 @@ function getTMDBApiKey() {
 }
 
 /**
- * Busca filme por título na API TMDB
+ * Busca filme por título na API TMDB com fallback para inglês
  * @param {string} query - Termo de busca (título do filme)
  * @param {string} language - Idioma dos resultados (padrão: pt-BR)
  * @returns {Promise<Object>} - Resultados da busca
@@ -41,17 +41,37 @@ async function searchMovie(query, language = 'pt-BR') {
   
   try {
     console.log(`🔍 Buscando no TMDB: "${query}" (idioma: ${language})`);
-    const response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+    
+    // Primeira tentativa em português
+    let response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
       params: {
         api_key: apiKey,
         query: query,
         language: language,
-        page: 1
+        page: 1,
+        include_adult: false
       },
       timeout: 10000
     });
     
-    console.log(`✅ TMDB retornou ${response.data.results?.length || 0} resultados`);
+    console.log(`✅ TMDB retornou ${response.data.results?.length || 0} resultados em ${language}`);
+    
+    // Se não encontrou resultados em português, tentar em inglês
+    if ((!response.data.results || response.data.results.length === 0) && language !== 'en-US') {
+      console.log(`🔄 Tentando busca em inglês...`);
+      response = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+        params: {
+          api_key: apiKey,
+          query: query,
+          language: 'en-US',
+          page: 1,
+          include_adult: false
+        },
+        timeout: 10000
+      });
+      console.log(`✅ TMDB retornou ${response.data.results?.length || 0} resultados em inglês`);
+    }
+    
     return response.data;
   } catch (error) {
     console.error('❌ Erro ao buscar filme no TMDB:', error.message);
