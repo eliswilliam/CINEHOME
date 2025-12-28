@@ -143,6 +143,7 @@
         const modal = document.getElementById('social-composer-modal');
         if (modal) {
             modal.style.display = 'none';
+            document.body.style.overflow = ''; // Réactiver le scroll
             // Réinitialiser le formulaire
             resetComposer();
         }
@@ -247,9 +248,13 @@
             // Envoyer au backend
             const response = await window.SocialFeedAPI.createPost(postData);
             
-            // Fermer le modal et recharger les posts
+            // Fermer le modal
             closeComposer();
-            await loadPostsFromBackend();
+            document.body.style.overflow = '';
+            
+            // Recharger les posts depuis le début
+            currentPage = 1;
+            await loadPostsFromBackend(1);
             
             // Notification
             showNotification('Post publicado com sucesso!', 'success');
@@ -487,15 +492,16 @@
         // Écouteurs pour les commentaires
         feedContainer.querySelectorAll('.social-comment-input').forEach(input => {
             input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    submitComment(parseInt(input.dataset.postId), input.value);
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitComment(input.dataset.postId, input.value);
                 }
             });
         });
 
         feedContainer.querySelectorAll('.social-comment-submit').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const postId = parseInt(btn.dataset.postId);
+                const postId = btn.dataset.postId;
                 const input = feedContainer.querySelector(`.social-comment-input[data-post-id="${postId}"]`);
                 if (input && input.value.trim()) {
                     submitComment(postId, input.value);
@@ -511,7 +517,7 @@
         // Voir plus de commentaires
         feedContainer.querySelectorAll('.social-view-more-comments').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const postId = parseInt(btn.dataset.postId);
+                const postId = btn.dataset.postId;
                 showAllComments(postId);
             });
         });
@@ -519,7 +525,7 @@
         // Menu du post
         feedContainer.querySelectorAll('.social-post-menu').forEach(menu => {
             menu.addEventListener('click', (e) => {
-                const postId = parseInt(menu.dataset.postId);
+                const postId = menu.dataset.postId;
                 showPostMenu(postId, e);
             });
         });
@@ -566,8 +572,10 @@
             
             commentsHTML = `
                 <div class="social-post-comments">
-                    ${displayComments.map(comment => `
-                        <div class="social-comment" data-comment-id="${comment.id}">
+                    ${displayComments.map(comment => {
+                        const commentId = comment._id || comment.id;
+                        return `
+                        <div class="social-comment" data-comment-id="${commentId}">
                             <img src="${comment.avatar}" alt="${comment.author}" class="social-comment-avatar">
                             <div class="social-comment-content">
                                 <div class="social-comment-header">
@@ -577,13 +585,13 @@
                                 </div>
                                 <p class="social-comment-text">${comment.text}</p>
                                 <div class="social-comment-actions">
-                                    <button class="social-comment-action" data-action="like-comment" data-comment-id="${comment.id}" data-post-id="${post.id}">
+                                    <button class="social-comment-action" data-action="like-comment" data-comment-id="${commentId}" data-post-id="${postId}">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                         </svg>
                                         <span>${comment.likes || 0}</span>
                                     </button>
-                                    <button class="social-comment-action" data-action="reply-comment" data-comment-id="${comment.id}" data-post-id="${post.id}">
+                                    <button class="social-comment-action" data-action="reply-comment" data-comment-id="${commentId}" data-post-id="${postId}">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                         </svg>
@@ -592,9 +600,9 @@
                                 </div>
                             </div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                     ${remainingCount > 0 ? `
-                        <button class="social-view-more-comments" data-post-id="${post.id}">
+                        <button class="social-view-more-comments" data-post-id="${postId}">
                             Ver mais ${remainingCount} comentário${remainingCount > 1 ? 's' : ''}
                         </button>
                     ` : ''}
@@ -606,8 +614,8 @@
         const commentInputHTML = `
             <div class="social-comment-input-wrapper">
                 <img src="${currentUserProfile.avatar}" alt="Seu avatar" class="social-comment-input-avatar">
-                <input type="text" class="social-comment-input" placeholder="Escreva um comentário..." data-post-id="${post.id}">
-                <button class="social-comment-submit" data-post-id="${post.id}" title="Enviar comentário">
+                <input type="text" class="social-comment-input" placeholder="Escreva um comentário..." data-post-id="${postId}">
+                <button class="social-comment-submit" data-post-id="${postId}" title="Enviar comentário">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -627,7 +635,7 @@
                             <span class="social-post-time">· ${timeAgo}</span>
                         </div>
                     </div>
-                    <button class="social-post-menu" data-post-id="${post.id}" title="Mais opções">⋯</button>
+                    <button class="social-post-menu" data-post-id="${postId}" title="Mais opções">⋯</button>
                 </div>
 
                 <div class="social-post-content">
@@ -636,26 +644,26 @@
                 </div>
 
                 <div class="social-post-actions">
-                    <button class="social-post-action ${likedClass}" data-action="like" data-post-id="${post.id}">
+                    <button class="social-post-action ${likedClass}" data-action="like" data-post-id="${postId}">
                         <svg class="heart-icon" viewBox="0 0 24 24" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                         </svg>
                         <span>${post.likes}</span>
                     </button>
-                    <button class="social-post-action" data-action="comment" data-post-id="${post.id}">
+                    <button class="social-post-action" data-action="comment" data-post-id="${postId}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
                         <span>${commentsCount}</span>
                     </button>
-                    <button class="social-post-action" data-action="share" data-post-id="${post.id}">
+                    <button class="social-post-action" data-action="share" data-post-id="${postId}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
                             <polyline points="16 6 12 2 8 6"></polyline>
                             <line x1="12" y1="2" x2="12" y2="15"></line>
                         </svg>
                     </button>
-                    <button class="social-post-action ${savedClass}" data-action="save" data-post-id="${post.id}">
+                    <button class="social-post-action ${savedClass}" data-action="save" data-post-id="${postId}">
                         <svg viewBox="0 0 24 24" fill="${post.saved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
@@ -673,7 +681,7 @@
      */
     function handlePostAction(e) {
         const action = e.currentTarget.dataset.action;
-        const postId = parseInt(e.currentTarget.dataset.postId);
+        const postId = e.currentTarget.dataset.postId; // Ne pas convertir en int, garder comme string
 
         if (action === 'like') {
             toggleLike(postId, e.currentTarget);
@@ -711,10 +719,19 @@
         };
 
         try {
-            await window.SocialFeedAPI.addComment(postId, commentData);
+            const result = await window.SocialFeedAPI.addComment(postId, commentData);
             
-            // Recharger les posts pour obtenir le commentaire mis à jour
-            await loadPostsFromBackend(1);
+            // Vider l'input
+            const input = document.querySelector(`.social-comment-input[data-post-id="${postId}"]`);
+            if (input) input.value = '';
+            
+            // Mettre à jour le post localement avec le nouveau commentaire
+            const post = socialPosts.find(p => (p._id || p.id) === postId);
+            if (post && result.comment) {
+                if (!post.comments) post.comments = [];
+                post.comments.push(result.comment);
+                renderFeed();
+            }
             
             showNotification('Comentário publicado!', 'success');
         } catch (error) {
@@ -728,8 +745,8 @@
      */
     function handleCommentAction(e) {
         const action = e.currentTarget.dataset.action;
-        const commentId = parseInt(e.currentTarget.dataset.commentId);
-        const postId = parseInt(e.currentTarget.dataset.postId);
+        const commentId = e.currentTarget.dataset.commentId; // Garder comme string
+        const postId = e.currentTarget.dataset.postId; // Garder comme string
 
         if (action === 'like-comment') {
             toggleCommentLike(postId, commentId);
@@ -743,10 +760,18 @@
      */
     async function toggleCommentLike(postId, commentId) {
         try {
-            await window.SocialFeedAPI.toggleCommentLike(postId, commentId, currentUserProfile.handle);
+            const response = await window.SocialFeedAPI.toggleCommentLike(postId, commentId, currentUserProfile.handle);
             
-            // Recharger pour mettre à jour l'affichage
-            await loadPostsFromBackend(1);
+            // Mettre à jour localement
+            const post = socialPosts.find(p => (p._id || p.id) === postId);
+            if (post && post.comments) {
+                const comment = post.comments.find(c => (c._id || c.id) === commentId);
+                if (comment) {
+                    comment.liked = response.liked;
+                    comment.likes = response.likes;
+                    renderFeed();
+                }
+            }
         } catch (error) {
             console.error('Erro ao curtir comentário:', error);
             showNotification('Erro ao curtir comentário.', 'error');
@@ -757,10 +782,10 @@
      * Répondre à un commentaire
      */
     function replyToComment(postId, commentId) {
-        const post = socialPosts.find(p => p.id === postId);
+        const post = socialPosts.find(p => (p._id || p.id) === postId);
         if (!post || !post.comments) return;
 
-        const comment = post.comments.find(c => c.id === commentId);
+        const comment = post.comments.find(c => (c._id || c.id) === commentId);
         if (comment) {
             const input = document.querySelector(`.social-comment-input[data-post-id="${postId}"]`);
             if (input) {
@@ -909,7 +934,7 @@
      * Partage un post
      */
     function sharePost(postId) {
-        const post = socialPosts.find(p => p.id === postId);
+        const post = socialPosts.find(p => (p._id || p.id) === postId);
         if (post) {
             const shareText = `Confira esta opinião sobre ${post.movieTitle || 'um filme'}: "${post.text}" - CineHome`;
             
