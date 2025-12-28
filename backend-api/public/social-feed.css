@@ -369,12 +369,17 @@
     color: inherit;
     cursor: pointer;
     font-size: 12px;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     padding: 4px 8px;
 }
 
-.social-post-action:hover {
+.social-post-action:hover:not(.liked):not(.saved) {
     color: #5f5dff;
+}
+
+.social-post-action:hover:not(.liked):not(.saved) svg path {
+    fill: #5f5dff;
+    fill-opacity: 0.3;
 }
 
 .social-post-action svg {
@@ -626,12 +631,22 @@
 }
 
 .social-post-action.liked svg {
-    fill: #ef4444;
-    stroke: #ef4444;
+    fill: #ef4444 !important;
+    stroke: #ef4444 !important;
+}
+
+.social-post-action.liked svg path {
+    fill: #ef4444 !important;
+    stroke: #ef4444 !important;
 }
 
 .social-post-action.liked:hover {
     color: #dc2626 !important;
+}
+
+.social-post-action.liked:hover svg path {
+    fill: #dc2626 !important;
+    stroke: #dc2626 !important;
 }
 
 .social-post-action.saved {
@@ -639,12 +654,22 @@
 }
 
 .social-post-action.saved svg {
-    fill: #5f5dff;
-    stroke: #5f5dff;
+    fill: #5f5dff !important;
+    stroke: #5f5dff !important;
+}
+
+.social-post-action.saved svg path {
+    fill: #5f5dff !important;
+    stroke: #5f5dff !important;
 }
 
 .social-post-action.saved:hover {
     color: #4a48ff !important;
+}
+
+.social-post-action.saved:hover svg path {
+    fill: #4a48ff !important;
+    stroke: #4a48ff !important;
 }
 
 .like-animation {
