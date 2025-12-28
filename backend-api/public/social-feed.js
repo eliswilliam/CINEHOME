@@ -10,6 +10,9 @@
     let socialPosts = [];
     let currentUserProfile = null;
     let currentRating = 0;
+    let currentPage = 1;
+    let hasMorePosts = false;
+    let isLoadingPosts = false;
 
     // Initialiser au chargement du DOM
     document.addEventListener('DOMContentLoaded', initSocialFeed);
@@ -19,10 +22,35 @@
      */
     function initSocialFeed() {
         currentUserProfile = getCurrentUserProfile();
-        setupEventListeners();
-        loadSamplePosts();
-        populateMovieDropdown();
-        setupHeaderButton();
+        loadAPIScript(() => {
+            setupEventListeners();
+            loadPostsFromBackend();
+            populateMovieDropdown();
+            setupHeaderButton();
+            setupInfiniteScroll();
+        });
+    }
+
+    /**
+     * Charge dynamiquement le script API
+     */
+    function loadAPIScript(callback) {
+        // Vérifier si l'API est déjà chargée
+        if (window.SocialFeedAPI) {
+            callback();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'social-feed-backend-api.js';
+        script.onload = callback;
+        script.onerror = () => {
+            console.error('Falha ao carregar o script da API');
+            showNotification('Erro ao carregar API. Usando modo offline.', 'error');
+            // Fallback vers les posts locaux
+            loadSamplePosts();
+        };
+        document.head.appendChild(script);
     }
 
     /**
@@ -115,7 +143,7 @@
         const modal = document.getElementById('social-composer-modal');
         if (modal) {
             modal.style.display = 'none';
-            document.body.style.overflow = '';
+            // Réinitialiser le formulaire
             resetComposer();
         }
     }
@@ -124,11 +152,8 @@
      * Réinitialise le formulaire du compositeur
      */
     function resetComposer() {
-        const textarea = document.getElementById('composer-textarea');
-        const movieSelect = document.getElementById('composer-movie-select');
-        
-        if (textarea) textarea.value = '';
-        if (movieSelect) movieSelect.value = '';
+        document.getElementById('composer-textarea').value = '';
+        document.getElementById('composer-movie-select').value = '';
         currentRating = 0;
         updateRatingDisplay();
     }
@@ -174,7 +199,7 @@
     /**
      * Soumet un nouveau post
      */
-    function submitPost() {
+    async function submitPost() {
         const text = document.getElementById('composer-textarea').value.trim();
         const movieSelect = document.getElementById('composer-movie-select');
         const movieId = movieSelect.value;
@@ -206,9 +231,8 @@
             moviePoster = moviePosters[movieId] || null;
         }
 
-        // Créer le post
-        const post = {
-            id: Date.now(),
+        // Créer les données du post
+        const postData = {
             author: currentUserProfile.name,
             handle: currentUserProfile.handle,
             avatar: currentUserProfile.avatar,
@@ -216,45 +240,134 @@
             movieId: movieId || null,
             movieTitle: movieTitle,
             moviePoster: moviePoster,
-            rating: currentRating,
-            timestamp: new Date(),
-            likes: 0,
-            comments: [],
-            liked: false,
-            saved: false
+            rating: currentRating
         };
 
-        // Ajouter le post au début
         try {
-            socialPosts.unshift(post);
-            savePosts();
-            closeComposer();
+            // Envoyer au backend
+            const response = await window.SocialFeedAPI.createPost(postData);
             
-            setTimeout(() => {
-                renderFeed();
-                showNotification('Post publicado com sucesso!', 'success');
-            }, 100);
+            // Fermer le modal et recharger les posts
+            closeComposer();
+            await loadPostsFromBackend();
+            
+            // Notification
+            showNotification('Post publicado com sucesso!', 'success');
         } catch (error) {
-            console.error('Erro ao publicar post:', error);
+            console.error('Erro ao criar post:', error);
             showNotification('Erro ao publicar post. Tente novamente.', 'error');
         }
     }
 
     /**
-     * Charge les posts d'exemple
+     * Charge les posts depuis le backend
+     */
+    async function loadPostsFromBackend(page = 1) {
+        if (isLoadingPosts) return;
+        
+        isLoadingPosts = true;
+        showLoadingIndicator();
+
+        try {
+            const response = await window.SocialFeedAPI.getAllPosts(page, 20);
+            
+            if (page === 1) {
+                // Nouvelle chargement: remplacer les posts
+                socialPosts = response.posts || [];
+            } else {
+                // Pagination: ajouter à la suite
+                socialPosts = [...socialPosts, ...(response.posts || [])];
+            }
+
+            currentPage = response.pagination?.currentPage || 1;
+            hasMorePosts = response.pagination?.hasMore || false;
+
+            // Enrichir les posts avec les infos de like/save pour l'utilisateur actuel
+            enrichPostsWithUserData();
+            
+            renderFeed();
+        } catch (error) {
+            console.error('Erro ao carregar posts do backend:', error);
+            showNotification('Erro ao carregar posts. Usando modo offline.', 'error');
+            // Fallback vers des posts d'exemple
+            if (socialPosts.length === 0) {
+                socialPosts = getDefaultPosts();
+                renderFeed();
+            }
+        } finally {
+            isLoadingPosts = false;
+            hideLoadingIndicator();
+        }
+    }
+
+    /**
+     * Enrichit les posts avec les données utilisateur (liked, saved)
+     */
+    function enrichPostsWithUserData() {
+        socialPosts = socialPosts.map(post => ({
+            ...post,
+            id: post._id || post.id,
+            liked: post.likedBy?.includes(currentUserProfile.handle) || false,
+            saved: post.savedBy?.includes(currentUserProfile.handle) || false
+        }));
+    }
+
+    /**
+     * Affiche un indicateur de chargement
+     */
+    function showLoadingIndicator() {
+        const feedContainer = document.getElementById('social-posts-feed');
+        if (!feedContainer) return;
+
+        const indicator = document.createElement('div');
+        indicator.id = 'loading-indicator';
+        indicator.style.cssText = `
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        `;
+        indicator.innerHTML = `
+            <svg width="40" height="40" viewBox="0 0 50 50" style="animation: spin 1s linear infinite;">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#5f5dff" stroke-width="5" stroke-dasharray="31.4 31.4" stroke-linecap="round" />
+            </svg>
+            <style>
+                @keyframes spin { to { transform: rotate(360deg); } }
+            </style>
+        `;
+        feedContainer.appendChild(indicator);
+    }
+
+    /**
+     * Cache l'indicateur de chargement
+     */
+    function hideLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    /**
+     * Configure le scroll infini
+     */
+    function setupInfiniteScroll() {
+        window.addEventListener('scroll', () => {
+            if (isLoadingPosts || !hasMorePosts) return;
+
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const threshold = document.documentElement.scrollHeight - 500;
+
+            if (scrollPosition >= threshold) {
+                loadPostsFromBackend(currentPage + 1);
+            }
+        });
+    }
+
+    /**
+     * Charge les posts d'exemple (fallback)
      */
     function loadSamplePosts() {
-        const savedPosts = localStorage.getItem('cinehome_social_posts');
-        if (savedPosts) {
-            try {
-                socialPosts = JSON.parse(savedPosts);
-            } catch (e) {
-                console.error('Erro ao carregar posts salvos:', e);
-                socialPosts = getDefaultPosts();
-            }
-        } else {
-            socialPosts = getDefaultPosts();
-        }
+        socialPosts = getDefaultPosts();
         renderFeed();
     }
 
@@ -343,28 +456,16 @@
         ];
     }
 
-    /**
-     * Sauvegarde les posts en localStorage
-     */
-    function savePosts() {
-        try {
-            localStorage.setItem('cinehome_social_posts', JSON.stringify(socialPosts));
-        } catch (error) {
-            console.error('Erro ao salvar posts:', error);
-        }
-    }
+
 
     /**
      * Affiche le feed
      */
     function renderFeed() {
         const feedContainer = document.getElementById('social-posts-feed');
-        if (!feedContainer) {
-            console.warn('Feed container não encontrado');
-            return;
-        }
+        if (!feedContainer) return;
 
-        if (!Array.isArray(socialPosts) || socialPosts.length === 0) {
+        if (socialPosts.length === 0) {
             feedContainer.innerHTML = `
                 <div class="social-empty-state">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -376,17 +477,7 @@
             return;
         }
 
-        try {
-            feedContainer.innerHTML = socialPosts.map(post => createPostElement(post)).join('');
-        } catch (error) {
-            console.error('Erro ao renderizar feed:', error);
-            feedContainer.innerHTML = `
-                <div class="social-empty-state">
-                    <p>Erro ao carregar posts. Recarregue a página.</p>
-                </div>
-            `;
-            return;
-        }
+        feedContainer.innerHTML = socialPosts.map(post => createPostElement(post)).join('');
 
         // Ajouter les écouteurs aux actions du post
         feedContainer.querySelectorAll('.social-post-action').forEach(action => {
@@ -446,6 +537,8 @@
      * Crée un élément HTML pour un post
      */
     function createPostElement(post) {
+        // Gérer les IDs MongoDB (_id) et IDs locaux (id)
+        const postId = post._id || post.id;
         const ratingStars = '★'.repeat(post.rating) + '☆'.repeat(5 - post.rating);
         const timeAgo = getTimeAgo(post.timestamp);
         const commentsCount = post.comments ? post.comments.length : 0;
@@ -524,7 +617,7 @@
         `;
 
         return `
-            <div class="social-post" data-post-id="${post.id}">
+            <div class="social-post" data-post-id="${postId}">
                 <div class="social-post-header">
                     <img src="${post.avatar}" alt="${post.author}" class="social-post-avatar">
                     <div class="social-post-user-info">
@@ -607,28 +700,27 @@
     /**
      * Soumet un commentaire
      */
-    function submitComment(postId, text) {
+    async function submitComment(postId, text) {
         if (!text.trim()) return;
 
-        const post = socialPosts.find(p => p.id === postId);
-        if (!post) return;
-
-        if (!post.comments) post.comments = [];
-
-        const newComment = {
-            id: Date.now(),
+        const commentData = {
             author: currentUserProfile.name,
             handle: currentUserProfile.handle,
             avatar: currentUserProfile.avatar,
-            text: text.trim(),
-            timestamp: new Date(),
-            likes: 0
+            text: text.trim()
         };
 
-        post.comments.push(newComment);
-        savePosts();
-        renderFeed();
-        showNotification('Comentário publicado!', 'success');
+        try {
+            await window.SocialFeedAPI.addComment(postId, commentData);
+            
+            // Recharger les posts pour obtenir le commentaire mis à jour
+            await loadPostsFromBackend(1);
+            
+            showNotification('Comentário publicado!', 'success');
+        } catch (error) {
+            console.error('Erro ao publicar comentário:', error);
+            showNotification('Erro ao publicar comentário.', 'error');
+        }
     }
 
     /**
@@ -649,15 +741,15 @@
     /**
      * Toggle like sur un commentaire
      */
-    function toggleCommentLike(postId, commentId) {
-        const post = socialPosts.find(p => p.id === postId);
-        if (!post || !post.comments) return;
-
-        const comment = post.comments.find(c => c.id === commentId);
-        if (comment) {
-            comment.likes = (comment.likes || 0) + 1;
-            savePosts();
-            renderFeed();
+    async function toggleCommentLike(postId, commentId) {
+        try {
+            await window.SocialFeedAPI.toggleCommentLike(postId, commentId, currentUserProfile.handle);
+            
+            // Recharger pour mettre à jour l'affichage
+            await loadPostsFromBackend(1);
+        } catch (error) {
+            console.error('Erro ao curtir comentário:', error);
+            showNotification('Erro ao curtir comentário.', 'error');
         }
     }
 
@@ -746,52 +838,70 @@
     /**
      * Supprimer un post
      */
-    function deletePost(postId) {
-        const index = socialPosts.findIndex(p => p.id === postId);
-        if (index !== -1) {
-            socialPosts.splice(index, 1);
-            savePosts();
-            renderFeed();
+    async function deletePost(postId) {
+        try {
+            await window.SocialFeedAPI.deletePost(postId, currentUserProfile.handle);
+            
+            // Recharger les posts
+            await loadPostsFromBackend(1);
+            
             showNotification('Post excluído!', 'success');
+        } catch (error) {
+            console.error('Erro ao excluir post:', error);
+            showNotification('Erro ao excluir post. Você tem permissão?', 'error');
         }
     }
 
     /**
      * Change le statut "like" d'un post avec animation
      */
-    function toggleLike(postId, button) {
-        const post = socialPosts.find(p => p.id === postId);
-        if (post) {
-            post.liked = !post.liked;
-            post.likes += post.liked ? 1 : -1;
+    async function toggleLike(postId, button) {
+        try {
+            const response = await window.SocialFeedAPI.toggleLike(postId, currentUserProfile.handle);
             
-            // Animation du coeur
-            if (button && post.liked) {
-                button.classList.add('like-animation');
-                setTimeout(() => button.classList.remove('like-animation'), 300);
+            // Mettre à jour localement pour une réponse rapide
+            const post = socialPosts.find(p => (p._id || p.id) === postId);
+            if (post) {
+                post.liked = response.liked;
+                post.likes = response.likes;
+                
+                // Animation du coeur
+                if (button && post.liked) {
+                    button.classList.add('like-animation');
+                    setTimeout(() => button.classList.remove('like-animation'), 300);
+                }
+                
+                renderFeed();
             }
-            
-            savePosts();
-            renderFeed();
+        } catch (error) {
+            console.error('Erro ao curtir post:', error);
+            showNotification('Erro ao curtir post.', 'error');
         }
     }
 
     /**
      * Toggle sauvegarde d'un post
      */
-    function toggleSave(postId, button) {
-        const post = socialPosts.find(p => p.id === postId);
-        if (post) {
-            post.saved = !post.saved;
+    async function toggleSave(postId, button) {
+        try {
+            const response = await window.SocialFeedAPI.toggleSave(postId, currentUserProfile.handle);
             
-            if (button && post.saved) {
-                button.classList.add('save-animation');
-                setTimeout(() => button.classList.remove('save-animation'), 300);
+            // Mettre à jour localement
+            const post = socialPosts.find(p => (p._id || p.id) === postId);
+            if (post) {
+                post.saved = response.saved;
+                
+                if (button && post.saved) {
+                    button.classList.add('save-animation');
+                    setTimeout(() => button.classList.remove('save-animation'), 300);
+                }
+                
+                renderFeed();
+                showNotification(post.saved ? 'Post salvo!' : 'Post removido dos salvos', 'success');
             }
-            
-            savePosts();
-            renderFeed();
-            showNotification(post.saved ? 'Post salvo!' : 'Post removido dos salvos', 'success');
+        } catch (error) {
+            console.error('Erro ao salvar post:', error);
+            showNotification('Erro ao salvar post.', 'error');
         }
     }
 
@@ -891,16 +1001,18 @@
     function showNotification(message, type = 'info') {
         // Créer une notification simple (vous pouvez améliorer cela)
         const notification = document.createElement('div');
+        const bgColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+            background: ${bgColor};
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
             z-index: 10000;
             animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         `;
         notification.textContent = message;
 
