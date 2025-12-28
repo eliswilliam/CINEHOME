@@ -622,7 +622,7 @@
 
 /* ===== Like & Save Animations ===== */
 .social-post-action.liked {
-    color: #ef4444;
+    color: #ef4444 !important;
 }
 
 .social-post-action.liked svg {
@@ -630,13 +630,21 @@
     stroke: #ef4444;
 }
 
+.social-post-action.liked:hover {
+    color: #dc2626 !important;
+}
+
 .social-post-action.saved {
-    color: #5f5dff;
+    color: #5f5dff !important;
 }
 
 .social-post-action.saved svg {
     fill: #5f5dff;
     stroke: #5f5dff;
+}
+
+.social-post-action.saved:hover {
+    color: #4a48ff !important;
 }
 
 .like-animation {

@@ -881,26 +881,71 @@
      * Change le statut "like" d'un post avec animation
      */
     async function toggleLike(postId, button) {
+        // Optimistic UI update
+        const post = socialPosts.find(p => (p._id || p.id) === postId);
+        if (!post) return;
+        
+        // Mettre à jour l'UI immédiatement (optimistic update)
+        const wasLiked = post.liked;
+        post.liked = !wasLiked;
+        post.likes = post.likes + (post.liked ? 1 : -1);
+        
+        // Mettre à jour visuellement le bouton
+        updateLikeButton(button, post.liked, post.likes);
+        
+        // Animation du coeur
+        if (post.liked) {
+            button.classList.add('like-animation');
+            setTimeout(() => button.classList.remove('like-animation'), 300);
+        }
+        
         try {
+            // Envoyer au backend
             const response = await window.SocialFeedAPI.toggleLike(postId, currentUserProfile.handle);
             
-            // Mettre à jour localement pour une réponse rapide
-            const post = socialPosts.find(p => (p._id || p.id) === postId);
-            if (post) {
-                post.liked = response.liked;
-                post.likes = response.likes;
-                
-                // Animation du coeur
-                if (button && post.liked) {
-                    button.classList.add('like-animation');
-                    setTimeout(() => button.classList.remove('like-animation'), 300);
-                }
-                
-                renderFeed();
-            }
+            // Synchroniser avec la réponse du serveur
+            post.liked = response.liked;
+            post.likes = response.likes;
+            updateLikeButton(button, post.liked, post.likes);
+            
         } catch (error) {
             console.error('Erro ao curtir post:', error);
+            
+            // Rollback en cas d'erreur
+            post.liked = wasLiked;
+            post.likes = post.likes + (wasLiked ? 1 : -1);
+            updateLikeButton(button, post.liked, post.likes);
+            
             showNotification('Erro ao curtir post.', 'error');
+        }
+    }
+    
+    /**
+     * Met à jour visuellement le bouton de like
+     */
+    function updateLikeButton(button, isLiked, likesCount) {
+        if (!button) return;
+        
+        // Mettre à jour la classe
+        if (isLiked) {
+            button.classList.add('liked');
+        } else {
+            button.classList.remove('liked');
+        }
+        
+        // Mettre à jour l'icône SVG
+        const heartIcon = button.querySelector('.heart-icon');
+        if (heartIcon) {
+            const path = heartIcon.querySelector('path');
+            if (path) {
+                path.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+            }
+        }
+        
+        // Mettre à jour le compteur
+        const span = button.querySelector('span');
+        if (span) {
+            span.textContent = likesCount;
         }
     }
 
@@ -908,25 +953,61 @@
      * Toggle sauvegarde d'un post
      */
     async function toggleSave(postId, button) {
+        const post = socialPosts.find(p => (p._id || p.id) === postId);
+        if (!post) return;
+        
+        // Optimistic UI update
+        const wasSaved = post.saved;
+        post.saved = !wasSaved;
+        
+        // Mettre à jour visuellement le bouton
+        updateSaveButton(button, post.saved);
+        
+        // Animation
+        if (post.saved) {
+            button.classList.add('save-animation');
+            setTimeout(() => button.classList.remove('save-animation'), 300);
+        }
+        
         try {
             const response = await window.SocialFeedAPI.toggleSave(postId, currentUserProfile.handle);
             
-            // Mettre à jour localement
-            const post = socialPosts.find(p => (p._id || p.id) === postId);
-            if (post) {
-                post.saved = response.saved;
-                
-                if (button && post.saved) {
-                    button.classList.add('save-animation');
-                    setTimeout(() => button.classList.remove('save-animation'), 300);
-                }
-                
-                renderFeed();
-                showNotification(post.saved ? 'Post salvo!' : 'Post removido dos salvos', 'success');
-            }
+            // Synchroniser avec la réponse du serveur
+            post.saved = response.saved;
+            updateSaveButton(button, post.saved);
+            
+            showNotification(post.saved ? 'Post salvo!' : 'Post removido dos salvos', 'success');
         } catch (error) {
             console.error('Erro ao salvar post:', error);
+            
+            // Rollback en cas d'erreur
+            post.saved = wasSaved;
+            updateSaveButton(button, post.saved);
+            
             showNotification('Erro ao salvar post.', 'error');
+        }
+    }
+    
+    /**
+     * Met à jour visuellement le bouton de sauvegarde
+     */
+    function updateSaveButton(button, isSaved) {
+        if (!button) return;
+        
+        // Mettre à jour la classe
+        if (isSaved) {
+            button.classList.add('saved');
+        } else {
+            button.classList.remove('saved');
+        }
+        
+        // Mettre à jour l'icône SVG
+        const svg = button.querySelector('svg');
+        if (svg) {
+            const path = svg.querySelector('path');
+            if (path) {
+                path.setAttribute('fill', isSaved ? 'currentColor' : 'none');
+            }
         }
     }
 
