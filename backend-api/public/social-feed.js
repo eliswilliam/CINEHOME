@@ -964,15 +964,28 @@
      * Retourne le profil utilisateur actuel
      */
     function getCurrentUserProfile() {
-        // Essayer de récupérer du stockage ou utiliser un par défaut
+        // Utiliser UsernameManager si disponible
+        if (window.UsernameManager && window.UsernameManager.hasUsername()) {
+            const username = window.UsernameManager.getUsername();
+            const displayName = window.UsernameManager.getFullName();
+            
+            return {
+                name: displayName,
+                handle: username,
+                avatar: 'imagens/avatar-01.svg'
+            };
+        }
+
+        // Fallback: essayer de récupérer du stockage
         const stored = localStorage.getItem('cinehome_user_profile');
         if (stored) {
             return JSON.parse(stored);
         }
 
+        // Dernier fallback
         return {
             name: 'Você',
-            handle: 'cinephile',
+            handle: 'usuario_' + Date.now(),
             avatar: 'imagens/avatar-01.svg'
         };
     }

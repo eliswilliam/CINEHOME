@@ -4,6 +4,22 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  username: { 
+    type: String, 
+    unique: true, 
+    sparse: true,  // Permet null/undefined
+    lowercase: true,
+    trim: true,
+    match: /^[a-zA-Z0-9_]{3,20}$/
+  },
+  displayName: { 
+    type: String, 
+    default: 'Usuário' 
+  },
+  avatar: { 
+    type: String, 
+    default: 'imagens/avatar-01.svg' 
+  },
   createdViaOAuth: { type: Boolean, default: false },
   oauthProvider: { type: String, enum: ['google', 'github', null], default: null }
 }, {

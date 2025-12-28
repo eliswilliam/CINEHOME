@@ -47,6 +47,85 @@ exports.login = async (req, res) => {
 };
 
 
+/**
+ * Vérifier la disponibilité d'un username
+ */
+exports.checkUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username || username.trim() === '') {
+      return res.status(400).json({ message: 'Username é obrigatório' });
+    }
+
+    const normalizedUsername = username.toLowerCase().trim();
+    
+    // Vérifier si le username existe déjà
+    const existingUser = await User.findOne({ username: normalizedUsername });
+    
+    res.status(200).json({ 
+      available: !existingUser,
+      username: normalizedUsername
+    });
+  } catch (error) {
+    console.error('Erro ao verificar username:', error);
+    res.status(500).json({ message: 'Erro ao verificar username' });
+  }
+};
+
+/**
+ * Enregistrer un nouveau username
+ */
+exports.registerUsername = async (req, res) => {
+  try {
+    const { username, displayName, avatar } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ message: 'Username é obrigatório' });
+    }
+
+    const normalizedUsername = username.toLowerCase().trim();
+
+    // Valider le format
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(normalizedUsername)) {
+      return res.status(400).json({ 
+        message: 'Username inválido. Use apenas letras, números e underscore (3-20 caracteres)' 
+      });
+    }
+
+    // Vérifier si déjà utilisé
+    const existingUser = await User.findOne({ username: normalizedUsername });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Username já está em uso' });
+    }
+
+    // Créer un nouvel utilisateur social (sans email/password pour l'instant)
+    const newUser = new User({
+      username: normalizedUsername,
+      displayName: displayName || username,
+      avatar: avatar || 'imagens/avatar-01.svg',
+      // Email et password seront ajoutés plus tard si nécessaire
+      email: `${normalizedUsername}@temp.cinehome.local`,
+      password: 'temp_password_' + Date.now() // Temporaire
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      message: 'Username registrado com sucesso',
+      user: {
+        username: newUser.username,
+        displayName: newUser.displayName,
+        avatar: newUser.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao registrar username:', error);
+    res.status(500).json({ message: 'Erro ao registrar username' });
+  }
+};
+
 // Enviar código de recuperação por email
 exports.forgotPassword = async (req, res) => {
   console.log('🔵 forgotPassword chamado');
