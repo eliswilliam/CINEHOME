@@ -7,8 +7,8 @@ require('dotenv').config();
 const router = express.Router();
 
 // URLs configuráveis
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cinehome1.vercel.app/reset.html';
-const FRONTEND_LOGIN_URL = process.env.FRONTEND_LOGIN_URL || 'https://cinehome1.vercel.app/profil.html';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cinehomebr.com/reset.html';
+const FRONTEND_LOGIN_URL = process.env.FRONTEND_LOGIN_URL || 'https://cinehomebr.com/profil.html';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 // --- Google OAuth (para recuperação de senha) ---
@@ -144,7 +144,7 @@ router.get('/auth/google/login/callback', async (req, res) => {
   
   if (!code) {
     console.error('❌ Aucun code reçu de Google');
-    return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_code`);
+    return res.redirect(`https://cinehomebr.com/login.html?error=no_code`);
   }
   
   try {
@@ -167,7 +167,7 @@ router.get('/auth/google/login/callback', async (req, res) => {
 
     if (!accessToken) {
       console.error('❌ Pas de access_token');
-      return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_token`);
+      return res.redirect(`https://cinehomebr.com/login.html?error=no_token`);
     }
 
     console.log('📤 Fetching user profile...');
@@ -183,7 +183,7 @@ router.get('/auth/google/login/callback', async (req, res) => {
 
     if (!email) {
       console.error('❌ Email not available');
-      return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_email`);
+      return res.redirect(`https://cinehomebr.com/login.html?error=no_email`);
     }
 
     // Verificar se o usuário existe no banco de dados
@@ -191,7 +191,7 @@ router.get('/auth/google/login/callback', async (req, res) => {
 
     if (!user) {
       console.warn('⚠️ Usuário não encontrado - redirecionando para cadastro');
-      return res.redirect(`https://cinehome1.vercel.app/login.html?error=user_not_found&email=${encodeURIComponent(email)}`);
+      return res.redirect(`https://cinehomebr.com/login.html?error=user_not_found&email=${encodeURIComponent(email)}`);
     }
 
     // Gerar um token JWT para o usuário
@@ -203,7 +203,7 @@ router.get('/auth/google/login/callback', async (req, res) => {
     return res.redirect(`${FRONTEND_LOGIN_URL}?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`);
   } catch (err) {
     console.error('❌ Google OAuth LOGIN Error:', err?.response?.data || err.message || err);
-    return res.redirect(`https://cinehome1.vercel.app/login.html?error=oauth_failed`);
+    return res.redirect(`https://cinehomebr.com/login.html?error=oauth_failed`);
   }
 });
 
@@ -215,7 +215,7 @@ router.get('/auth/google/signup/callback', async (req, res) => {
   
   if (!code) {
     console.error('❌ Aucun code reçu de Google');
-    return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_code`);
+    return res.redirect(`https://cinehomebr.com/login.html?error=no_code`);
   }
   
   try {
@@ -238,7 +238,7 @@ router.get('/auth/google/signup/callback', async (req, res) => {
 
     if (!accessToken) {
       console.error('❌ Pas de access_token');
-      return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_token`);
+      return res.redirect(`https://cinehomebr.com/login.html?error=no_token`);
     }
 
     console.log('📤 Fetching user profile...');
@@ -254,7 +254,7 @@ router.get('/auth/google/signup/callback', async (req, res) => {
 
     if (!email) {
       console.error('❌ Email not available');
-      return res.redirect(`https://cinehome1.vercel.app/login.html?error=no_email`);
+      return res.redirect(`https://cinehomebr.com/login.html?error=no_email`);
     }
 
     // Verificar se o usuário já existe
@@ -291,7 +291,7 @@ router.get('/auth/google/signup/callback', async (req, res) => {
     return res.redirect(`${FRONTEND_LOGIN_URL}?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&new=true`);
   } catch (err) {
     console.error('❌ Google OAuth SIGNUP Error:', err?.response?.data || err.message || err);
-    return res.redirect(`https://cinehome1.vercel.app/login.html?error=oauth_failed`);
+    return res.redirect(`https://cinehomebr.com/login.html?error=oauth_failed`);
   }
 });
 

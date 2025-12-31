@@ -2,7 +2,7 @@ const CONFIG = {
   // Détection automatique de l'environnement
   API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:10000'  // Développement local
-    : 'https://cinehome1.vercel.app',  // Production
+    : 'https://cinehomebr.com',  // Production
   
   ENDPOINTS: {
     LOGIN: '/api/users/login',
