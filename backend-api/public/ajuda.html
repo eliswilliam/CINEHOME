@@ -42,11 +42,13 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        // Configuração da API com detecção automática de ambiente
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:10000/api/chat'
-            : 'https://cinehomebr.com/api/chat';
+        // Configuração da API - utilise CONFIG.API_BASE_URL si disponible
+        const API_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:10000'
+                : 'https://cinehomebr.com')) + '/api/chat';
         
         console.log('🤖 Chat API configurada:', API_URL);
 
@@ -206,12 +208,17 @@
         // Verificar conexão com backend ao carregar
         window.addEventListener('load', async () => {
             try {
-                const response = await fetch('https://cinehome1.vercel.app/health');
+                const healthUrl = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 
+                    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                        ? 'http://localhost:10000'
+                        : 'https://cinehomebr.com')) + '/health';
+                const response = await fetch(healthUrl);
                 if (!response.ok) {
                     showError('Backend não está respondendo. Verifique a conexão com o servidor.');
                 }
             } catch (error) {
-                showError('Backend não está respondendo. Verifique a conexão com o servidor.');
+                console.warn('⚠️ Erro ao verificar backend:', error);
+                // Ne pas afficher d'erreur au chargement, seulement lors de l'envoi
             }
         });
     </script>

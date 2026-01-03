@@ -6,8 +6,8 @@
 (function() {
     'use strict';
 
-    // Configuration de l'API
-    const API_BASE_URL = window.location.origin + '/api';
+    // Configuration de l'API - utilise CONFIG.API_BASE_URL si disponible
+    const API_BASE_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : window.location.origin) + '/api';
     const API_POSTS_URL = `${API_BASE_URL}/posts`;
 
     // Classe principale pour gérer les appels API
