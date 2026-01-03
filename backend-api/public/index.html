@@ -801,5 +801,63 @@
 <script src="promo-bg.js" defer></script>
 <script src="footer.js" defer></script>
 <script src="script.js" defer></script>
+
+<!-- Botão de Chat Flutuante -->
+<a href="ajuda.html" class="chat-floating-btn" aria-label="Ajuda e Suporte" title="Precisa de ajuda?">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+</a>
+
+<style>
+.chat-floating-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: #5f5dff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(95, 93, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 9999;
+  text-decoration: none;
+}
+
+.chat-floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(95, 93, 255, 0.6);
+  background: #4d4bdd;
+}
+
+.chat-floating-btn svg {
+  color: white;
+  width: 28px;
+  height: 28px;
+}
+
+.chat-floating-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .chat-floating-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .chat-floating-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+</style>
+
 </body>
 </html
