@@ -42,18 +42,28 @@ exports.createPost = async (req, res) => {
  */
 exports.getAllPosts = async (req, res) => {
   try {
+    console.log('📥 getAllPosts: Requête reçue');
+    console.log('📋 Query params:', req.query);
+    
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
+    console.log(`📄 Pagination: page=${page}, limit=${limit}, skip=${skip}`);
+
+    console.log('🔍 Recherche des posts...');
     const posts = await Post.find()
       .sort({ timestamp: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Post.countDocuments();
+    console.log(`✅ ${posts.length} posts trouvés`);
 
-    res.status(200).json({
+    console.log('🔢 Comptage total...');
+    const total = await Post.countDocuments();
+    console.log(`✅ Total: ${total} posts`);
+
+    const response = {
       posts,
       pagination: {
         currentPage: page,
@@ -61,9 +71,19 @@ exports.getAllPosts = async (req, res) => {
         totalPosts: total,
         hasMore: skip + posts.length < total
       }
+    };
+
+    console.log('📤 Envoi de la réponse:', {
+      postsCount: posts.length,
+      totalPosts: total,
+      currentPage: page
     });
+
+    res.status(200).json(response);
+    console.log('✅ Réponse envoyée avec succès');
   } catch (error) {
-    console.error('Erro ao buscar posts:', error);
+    console.error('❌ Erro ao buscar posts:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({ message: 'Erro ao buscar posts', error: error.message });
   }
 };

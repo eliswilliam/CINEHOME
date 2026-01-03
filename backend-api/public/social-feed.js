@@ -1105,8 +1105,17 @@
      * Formate le temps écoulé
      */
     function getTimeAgo(date) {
+        // Convertir en objet Date si c'est une string
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        
+        // Vérifier si c'est une date valide
+        if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+            console.warn('Date invalide:', date);
+            return 'agora';
+        }
+        
         const now = new Date();
-        const diffMs = now - new Date(date);
+        const diffMs = now - dateObj;
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
@@ -1116,7 +1125,7 @@
         if (diffHours < 24) return `${diffHours}h`;
         if (diffDays < 7) return `${diffDays}d`;
 
-        return date.toLocaleDateString('pt-BR');
+        return dateObj.toLocaleDateString('pt-BR');
     }
 
     /**
