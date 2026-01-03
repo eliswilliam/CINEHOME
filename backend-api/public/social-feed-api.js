@@ -338,7 +338,7 @@ console.log('🎬 Social Feed API: Chargement du module...');
                 color: #888;
             `;
             loader.textContent = 'Carregando...';
-            document.getElementById('social-feed-container')?.appendChild(loader);
+            document.getElementById('social-posts-feed')?.appendChild(loader);
         }
         loader.style.display = 'block';
     }
@@ -358,11 +358,11 @@ console.log('🎬 Social Feed API: Chargement du module...');
      */
     function renderFeed() {
         console.log('🎨 renderFeed appelée avec', socialPosts.length, 'posts');
-        const feedContainer = document.getElementById('social-feed-container');
+        const feedContainer = document.getElementById('social-posts-feed');
         console.log('📦 Container trouvé:', feedContainer ? 'OUI' : 'NON');
         
         if (!feedContainer) {
-            console.error('❌ Container #social-feed-container introuvable!');
+            console.error('❌ Container #social-posts-feed introuvable!');
             return;
         }
 
