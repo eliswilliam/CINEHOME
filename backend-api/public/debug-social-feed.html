@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Social Feed - Render</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test { background: #2a2a2a; padding: 15px; margin: 10px 0; border-left: 4px solid #0f0; }
+        .error { border-left-color: #f00; color: #f00; }
+        .success { border-left-color: #0f0; color: #0f0; }
+        .warning { border-left-color: #ff0; color: #ff0; }
+        pre { background: #000; padding: 10px; overflow-x: auto; }
+        h2 { color: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Social Feed - Render Deployment</h1>
+    
+    <div id="results"></div>
+
+    <script src="config.js"></script>
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(title, content, type = 'test') {
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.innerHTML = `<strong>${title}</strong><br>${content}`;
+            results.appendChild(div);
+        }
+
+        async function runTests() {
+            // Test 1: Config chargé
+            log('✅ Test 1: CONFIG chargé?', 
+                typeof CONFIG !== 'undefined' ? 
+                `Oui ✓<br>API_BASE_URL: ${CONFIG.API_BASE_URL}` : 
+                'Non ✗', 
+                typeof CONFIG !== 'undefined' ? 'success' : 'error'
+            );
+
+            // Test 2: Hostname
+            log('📍 Test 2: Environnement', 
+                `hostname: ${window.location.hostname}<br>` +
+                `origin: ${window.location.origin}<br>` +
+                `protocol: ${window.location.protocol}`
+            );
+
+            // Test 3: API URL construite
+            const API_BASE_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : window.location.origin) + '/api';
+            log('🔧 Test 3: API URL construite', 
+                `${API_BASE_URL}<br>Posts URL: ${API_BASE_URL}/posts`
+            );
+
+            // Test 4: Fetch health
+            try {
+                const healthResponse = await fetch(`${CONFIG.API_BASE_URL}/health`);
+                const healthData = await healthResponse.json();
+                log('❤️ Test 4: Health Check', 
+                    `Status: ${healthResponse.status}<br>` +
+                    `Response: <pre>${JSON.stringify(healthData, null, 2)}</pre>`,
+                    'success'
+                );
+            } catch (error) {
+                log('❤️ Test 4: Health Check', 
+                    `ERROR: ${error.message}`,
+                    'error'
+                );
+            }
+
+            // Test 5: Fetch posts
+            try {
+                log('⏳ Test 5: Chargement des posts...', 'En cours...');
+                const postsResponse = await fetch(`${API_BASE_URL}/posts?page=1&limit=5`);
+                const postsData = await postsResponse.json();
+                
+                log('📦 Test 5: API Posts', 
+                    `Status: ${postsResponse.status}<br>` +
+                    `Total posts: ${postsData.pagination?.totalPosts || 0}<br>` +
+                    `Posts récupérés: ${postsData.posts?.length || 0}<br>` +
+                    `<pre>${JSON.stringify(postsData.posts?.[0] || {}, null, 2).substring(0, 300)}...</pre>`,
+                    postsResponse.ok ? 'success' : 'error'
+                );
+            } catch (error) {
+                log('📦 Test 5: API Posts', 
+                    `ERROR: ${error.message}<br>Stack: <pre>${error.stack}</pre>`,
+                    'error'
+                );
+            }
+
+            // Test 6: Container HTML
+            const container = document.getElementById('social-posts-feed');
+            log('📦 Test 6: Container HTML', 
+                container ? 'Trouvé ✓' : 'Introuvable ✗',
+                container ? 'success' : 'warning'
+            );
+
+            // Test 7: CORS
+            try {
+                const corsTest = await fetch(`${API_BASE_URL}/posts`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                log('🌐 Test 7: CORS', 
+                    `Status: ${corsTest.status}<br>Headers OK ✓`,
+                    'success'
+                );
+            } catch (error) {
+                log('🌐 Test 7: CORS', 
+                    `ERROR: ${error.message}`,
+                    'error'
+                );
+            }
+
+            log('✅ Tests terminés!', 
+                'Si tous les tests sont verts, le problème vient du JavaScript social-feed.js',
+                'success'
+            );
+        }
+
+        // Lancer les tests au chargement
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+
+    <!-- Container test -->
+    <div id="social-posts-feed" style="display:none;"></div>
+</body>
+</html>

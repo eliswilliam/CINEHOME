@@ -21,36 +21,28 @@
      * Initialise le module de feed social
      */
     function initSocialFeed() {
+        console.log('🚀 initSocialFeed: Démarrage...');
+        
         currentUserProfile = getCurrentUserProfile();
-        loadAPIScript(() => {
-            setupEventListeners();
-            loadPostsFromBackend();
-            populateMovieDropdown();
-            setupHeaderButton();
-            setupInfiniteScroll();
-        });
-    }
-
-    /**
-     * Charge dynamiquement le script API
-     */
-    function loadAPIScript(callback) {
-        // Vérifier si l'API est déjà chargée
-        if (window.SocialFeedAPI) {
-            callback();
+        console.log('👤 Profil utilisateur:', currentUserProfile);
+        
+        // Vérifier si SocialFeedAPI est disponible
+        if (typeof window.SocialFeedAPI === 'undefined') {
+            console.error('❌ SocialFeedAPI non disponible! Vérifier que social-feed-backend-api.js est chargé.');
+            showNotification('Erro ao carregar API. Usando modo offline.', 'error');
+            loadSamplePosts();
             return;
         }
-
-        const script = document.createElement('script');
-        script.src = 'social-feed-backend-api.js';
-        script.onload = callback;
-        script.onerror = () => {
-            console.error('Falha ao carregar o script da API');
-            showNotification('Erro ao carregar API. Usando modo offline.', 'error');
-            // Fallback vers les posts locaux
-            loadSamplePosts();
-        };
-        document.head.appendChild(script);
+        
+        console.log('✅ SocialFeedAPI disponible');
+        
+        setupEventListeners();
+        loadPostsFromBackend();
+        populateMovieDropdown();
+        setupHeaderButton();
+        setupInfiniteScroll();
+        
+        console.log('✅ initSocialFeed: Terminé');
     }
 
     /**
@@ -268,13 +260,20 @@
      * Charge les posts depuis le backend
      */
     async function loadPostsFromBackend(page = 1) {
-        if (isLoadingPosts) return;
+        console.log('📥 loadPostsFromBackend: Démarrage page', page);
+        
+        if (isLoadingPosts) {
+            console.log('⏳ Déjà en chargement, ignoré');
+            return;
+        }
         
         isLoadingPosts = true;
         showLoadingIndicator();
 
         try {
+            console.log('🌐 Appel SocialFeedAPI.getAllPosts...');
             const response = await window.SocialFeedAPI.getAllPosts(page, 20);
+            console.log('✅ Réponse reçue:', response);
             
             if (page === 1) {
                 // Nouvelle chargement: remplacer les posts
@@ -284,24 +283,30 @@
                 socialPosts = [...socialPosts, ...(response.posts || [])];
             }
 
+            console.log(`📝 ${socialPosts.length} posts chargés`);
+
             currentPage = response.pagination?.currentPage || 1;
             hasMorePosts = response.pagination?.hasMore || false;
 
             // Enrichir les posts avec les infos de like/save pour l'utilisateur actuel
             enrichPostsWithUserData();
             
+            console.log('🎨 Appel renderFeed...');
             renderFeed();
         } catch (error) {
-            console.error('Erro ao carregar posts do backend:', error);
+            console.error('❌ Erro ao carregar posts do backend:', error);
+            console.error('Stack:', error.stack);
             showNotification('Erro ao carregar posts. Usando modo offline.', 'error');
             // Fallback vers des posts d'exemple
             if (socialPosts.length === 0) {
+                console.log('📦 Chargement posts par défaut...');
                 socialPosts = getDefaultPosts();
                 renderFeed();
             }
         } finally {
             isLoadingPosts = false;
             hideLoadingIndicator();
+            console.log('✅ loadPostsFromBackend: Terminé');
         }
     }
 

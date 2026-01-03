@@ -10,6 +10,8 @@
     const API_BASE_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : window.location.origin) + '/api';
     const API_POSTS_URL = `${API_BASE_URL}/posts`;
 
+    console.log('🔧 Social Feed Backend API: URL configurée:', API_BASE_URL);
+
     // Classe principale pour gérer les appels API
     class SocialFeedAPI {
         /**

@@ -8,12 +8,12 @@ console.log('🎬 Social Feed API: Chargement du module...');
 (function() {
     'use strict';
 
-    // Configuration de l'API
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:10000/api' 
-        : '/api';
+    // Configuration de l'API - utilise CONFIG.API_BASE_URL du fichier config.js
+    const API_BASE_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : window.location.origin) + '/api';
+    const API_POSTS_URL = `${API_BASE_URL}/posts`;
     
     console.log('🔧 Social Feed API: URL configurée:', API_BASE_URL);
+    console.log('🎯 Social Feed API: Posts URL:', API_POSTS_URL);
 
     // État du feed social
     let socialPosts = [];
