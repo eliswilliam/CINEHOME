@@ -187,11 +187,24 @@ router.get('/auth/google/login/callback', async (req, res) => {
     }
 
     // Verificar se o usuário existe no banco de dados
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
     if (!user) {
-      console.warn('⚠️ Usuário não encontrado - redirecionando para cadastro');
-      return res.redirect(`https://cinehomebr.com/login.html?error=user_not_found&email=${encodeURIComponent(email)}`);
+      console.warn('⚠️ Usuário não encontrado - criando novo usuário via Google OAuth');
+      
+      // Criar um novo usuário automaticamente
+      // Gerar uma senha aleatória segura para usuários OAuth
+      const randomPassword = require('crypto').randomBytes(32).toString('hex');
+      
+      user = new User({
+        email,
+        password: randomPassword, // Esta senha será criptografada pelo hook pre-save do modelo
+        createdViaOAuth: true,
+        oauthProvider: 'google'
+      });
+
+      await user.save();
+      console.log('✅ New user created via Google OAuth (LOGIN flow)');
     }
 
     // Gerar um token JWT para o usuário
