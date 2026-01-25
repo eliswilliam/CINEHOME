@@ -2,7 +2,7 @@
 
 link de hospedagem : https://cinehomebr.com
 
-<img width="600" height="600" alt="CINEHOME - Apresentação" src="https://github.com/user-attachments/assets/77c92402-03ef-4cbe-a4d2-53a50cc2ede2" />
+<img width="600" height="600" alt="CINEHOME - Apresentação" src="cinehomeeeeeeeeeeebr.png" />
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -352,3 +352,4 @@ Este projeto foi desenvolvido para fins educacionais e de portfólio.
 
 
 ---
+
